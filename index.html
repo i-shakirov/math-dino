@@ -301,6 +301,96 @@
       { id: 'all-100',          icon: '👑', name: 'Магистр',                 desc: 'Выучить все 100 примеров' }
     ];
 
+    // === SECTION: I18N ===
+
+    const LANGS = ['ru', 'ko', 'en'];
+    const LANG_NAMES = { ru: 'Русский', ko: '한국어', en: 'English' };
+    const LANG_SHORT = { ru: 'RU', ko: '한', en: 'EN' };
+    const DEFAULT_LANG = 'en';
+
+    // Словари заполняются задачами 3–6 (ru), 9 (en) и 10 (ko).
+    const I18N = { ru: {}, ko: {}, en: {} };
+
+    let _lang = 'ru';
+    function getLang() { return _lang; }
+    function setLang(lang) { _lang = LANGS.includes(lang) ? lang : DEFAULT_LANG; }
+
+    function _langFromTag(tag) {
+      const code = String(tag || '').toLowerCase().slice(0, 2);
+      return LANGS.includes(code) ? code : DEFAULT_LANG;
+    }
+
+    function detectLang() {
+      return _langFromTag(typeof navigator === 'undefined' ? '' : navigator.language);
+    }
+
+    // Корейская падежная частица зависит от того, кончается ли последний
+    // слог согласной (받침). Проверяется арифметикой по коду хангыля.
+    const JOSA_PAIRS = {
+      '이/가': ['이', '가'],
+      '은/는': ['은', '는'],
+      '을/를': ['을', '를'],
+      '과/와': ['과', '와'],
+      '으로/로': ['으로', '로']
+    };
+
+    function _jongseong(word) {
+      const s = String(word == null ? '' : word);
+      if (!s) return 0;
+      const code = s.charCodeAt(s.length - 1);
+      if (code < 0xAC00 || code > 0xD7A3) return 0;   // не слог хангыля
+      return (code - 0xAC00) % 28;
+    }
+
+    function josaFor(word, pair) {
+      const forms = JOSA_PAIRS[pair];
+      if (!forms) return '';
+      const jong = _jongseong(word);
+      // (으)로 — исключение: после ㄹ (индекс 8) ведёт себя как после гласной.
+      if (pair === '으로/로') return (jong === 0 || jong === 8) ? forms[1] : forms[0];
+      return jong !== 0 ? forms[0] : forms[1];
+    }
+
+    const _pluralRules = {};
+    function _pluralCategory(lang, n) {
+      if (!_pluralRules[lang]) _pluralRules[lang] = new Intl.PluralRules(lang);
+      return _pluralRules[lang].select(Number(n));
+    }
+
+    // Шаблон может быть строкой либо объектом форм числа.
+    // {이/가} и подобные берут слово из предыдущей подстановки.
+    function _render(value, params) {
+      const p = params || {};
+      let template = value;
+      if (template && typeof template === 'object') {
+        const cat = _pluralCategory(_lang, p.n);
+        template = template[cat] !== undefined ? template[cat] : template.other;
+        if (template === undefined) {
+          if (isTestMode()) throw new Error('i18n: нет формы "' + cat + '" для n=' + p.n);
+          template = '';
+        }
+      }
+      let previous = '';
+      return String(template).replace(/\{([^{}]+)\}/g, (whole, name) => {
+        if (JOSA_PAIRS[name]) return josaFor(previous, name);
+        previous = p[name] === undefined ? '' : String(p[name]);
+        return previous;
+      });
+    }
+
+    function t(key, params) {
+      const dict = I18N[_lang] || {};
+      let value = dict[key];
+      if (value === undefined) {
+        if (isTestMode()) {
+          throw new Error('i18n: нет ключа "' + key + '" для языка ' + _lang);
+        }
+        value = I18N.ru[key];
+        if (value === undefined) return key;
+      }
+      return _render(value, params);
+    }
+
     // === SECTION: TEST INFRA ===
     // Простой test runner. Активируется ?test=1 в URL.
     // Каждый describe — группа, it — тест. assert/assertEq бросают AssertionError.
@@ -1556,6 +1646,97 @@
       });
     });
 
+    describe('i18n: подстановка', () => {
+      it('подставляет параметры', () => {
+        assertEq(_render('Привет, {name}!', { name: 'Аня' }), 'Привет, Аня!');
+      });
+
+      it('неизвестный параметр становится пустой строкой', () => {
+        assertEq(_render('{a}-{b}', { a: '1' }), '1-');
+      });
+
+      it('строка без плейсхолдеров не меняется', () => {
+        assertEq(_render('Просто текст', {}), 'Просто текст');
+      });
+    });
+
+    describe('i18n: корейские частицы', () => {
+      it('이/가 по наличию финальной согласной', () => {
+        assertEq(josaFor('이구아노돈', '이/가'), '이');
+        assertEq(josaFor('트리케라톱스', '이/가'), '가');
+      });
+
+      it('은/는 и 을/를 работают по тому же правилу', () => {
+        assertEq(josaFor('이구아노돈', '은/는'), '은');
+        assertEq(josaFor('트리케라톱스', '은/는'), '는');
+        assertEq(josaFor('이구아노돈', '을/를'), '을');
+        assertEq(josaFor('트리케라톱스', '을/를'), '를');
+      });
+
+      it('(으)로 после ㄹ ведёт себя как после гласной', () => {
+        assertEq(josaFor('서울', '으로/로'), '로');
+        assertEq(josaFor('부산', '으로/로'), '으로');
+      });
+
+      it('нехангыльное слово получает форму без батчима', () => {
+        assertEq(josaFor('Anna', '이/가'), '가');
+        assertEq(josaFor('', '이/가'), '가');
+      });
+
+      it('шаблон подставляет частицу по предыдущему значению', () => {
+        assertEq(_render('{dino}{이/가} 태어났어요!', { dino: '이구아노돈' }),
+          '이구아노돈이 태어났어요!');
+        assertEq(_render('{dino}{이/가} 태어났어요!', { dino: '트리케라톱스' }),
+          '트리케라톱스가 태어났어요!');
+      });
+    });
+
+    describe('i18n: множественное число', () => {
+      const RU = { one: '{n} пример', few: '{n} примера', many: '{n} примеров' };
+      const KO = { other: '문제 {n}개' };
+      const EN = { one: '{n} problem', other: '{n} problems' };
+
+      it('русские формы', () => {
+        const was = getLang(); setLang('ru');
+        assertEq(_render(RU, { n: 1 }), '1 пример');
+        assertEq(_render(RU, { n: 3 }), '3 примера');
+        assertEq(_render(RU, { n: 5 }), '5 примеров');
+        assertEq(_render(RU, { n: 11 }), '11 примеров');
+        assertEq(_render(RU, { n: 21 }), '21 пример');
+        assertEq(_render(RU, { n: 0 }), '0 примеров');
+        setLang(was);
+      });
+
+      it('корейский всегда попадает в other', () => {
+        const was = getLang(); setLang('ko');
+        assertEq(_render(KO, { n: 1 }), '문제 1개');
+        assertEq(_render(KO, { n: 7 }), '문제 7개');
+        setLang(was);
+      });
+
+      it('английские формы', () => {
+        const was = getLang(); setLang('en');
+        assertEq(_render(EN, { n: 1 }), '1 problem');
+        assertEq(_render(EN, { n: 2 }), '2 problems');
+        assertEq(_render(EN, { n: 0 }), '0 problems');
+        setLang(was);
+      });
+    });
+
+    describe('i18n: определение языка', () => {
+      it('берёт поддерживаемый язык браузера', () => {
+        assertEq(_langFromTag('ko-KR'), 'ko');
+        assertEq(_langFromTag('ru'), 'ru');
+        assertEq(_langFromTag('en-US'), 'en');
+      });
+
+      it('неизвестный язык даёт английский', () => {
+        assertEq(_langFromTag('ja-JP'), 'en');
+        assertEq(_langFromTag(''), 'en');
+        assertEq(_langFromTag(null), 'en');
+      });
+    });
+
     // === SECTION: VIEWS ===
     function el(tag, attrs, ...children) {
       const e = document.createElement(tag);
@@ -1565,7 +1746,6 @@
           if (k === 'onclick') e.addEventListener('click', v);
           else if (k === 'style' && typeof v === 'object') Object.assign(e.style, v);
           else if (k === 'className') e.className = v;
-          else if (k === 'html') e.innerHTML = v;
           else e.setAttribute(k, v);
         }
       }
