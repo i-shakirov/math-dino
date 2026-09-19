@@ -445,13 +445,13 @@
       'trainer.timerZero': '⏱ 0.0с',
       'trainer.correctFast': 'Молодец! +{xp} XP',
       'trainer.correctSlow': 'Правильно, но подумай быстрее. +{xp} XP',
-      'trainer.remember': 'Запомни: {a} × {b} = {c}',
+      'trainer.remember': 'Запомни:',
       'trainer.next': 'Дальше →',
       'trainer.newAch': 'Новая ачивка: {name}',
       'trainer.tierUp': '🎓 Открыт {tier} уровень!',
       'trainer.tierUpList': 'Новые примеры: {list}',
       'trainer.levelUp': 'Lv.{level} — {name}! 🎉',
-      'trainer.newDino': 'Новый динозавр: {name}',
+      'trainer.newDino': 'Новый динозавр: {name}!',
       'trainer.hatchOk': 'Класс!',
 
       'round.title': '🏁 Раунд закончен!',
@@ -2008,8 +2008,9 @@
         assertEq(t('trainer.timer', { sec: '1.4' }), '⏱ 1.4с');
       });
 
-      it('подсказка с правильным ответом', () => {
-        assertEq(t('trainer.remember', { a: 7, b: 8, c: 56 }), 'Запомни: 7 × 8 = 56');
+      it('похвала подставляет опыт', () => {
+        assertEq(t('trainer.correctFast', { xp: 10 }), 'Молодец! +10 XP');
+        assertEq(t('trainer.correctSlow', { xp: 5 }), 'Правильно, но подумай быстрее. +5 XP');
       });
 
       it('итог раунда', () => {
@@ -2388,7 +2389,7 @@
       else if (isCorrect) { cls = 'correct-slow'; msg = t('trainer.correctSlow', { xp: xpGained }); duration = FEEDBACK_MS_SLOW; }
       else {
         cls = 'wrong';
-        msg = t('trainer.remember', { a: tr.currentQuestion.a, b: tr.currentQuestion.b, c: correctAnswer });
+        msg = t('trainer.remember');
         duration = FEEDBACK_MS_WRONG;
       }
       if (input) input.classList.add(cls);
