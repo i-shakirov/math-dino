@@ -25,6 +25,7 @@
     .header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: rgba(255,255,255,0.7); border-radius: 12px; margin-bottom: 16px; }
     .header h1 { margin: 0; font-size: 22px; }
     .header-actions button { font-size: 24px; background: none; border: none; cursor: pointer; padding: 4px 8px; }
+    .header-actions .lang-chip-btn { font-size: 13px; }
     .lang-chip { display: inline-flex; gap: 2px; background: rgba(255,255,255,0.6); border-radius: 10px; padding: 2px; margin-right: 8px; }
     .lang-chip-btn { font-family: inherit; font-size: 13px; padding: 4px 8px; border: none; border-radius: 8px; background: none; color: #7c6a58; cursor: pointer; }
     .lang-chip-btn.is-current { background: #fff; color: #2d1810; font-weight: bold; }
@@ -318,6 +319,10 @@
 
     // Словари заполняются задачами 3–6 (ru), 9 (en) и 10 (ko).
     const I18N = { ru: {}, ko: {}, en: {} };
+    // Сколько приветствий есть в словарях (data.greeting.1..N) — при
+    // добавлении нового приветствия эту константу нужно поднять и добавить
+    // ключ во все языки.
+    const GREETING_COUNT = 4;
 
     I18N.ru = {
       'app.title': 'Тренажёр динозавров',
@@ -799,7 +804,7 @@
       'data.ach.streak-25.desc': '25 correct answers in a row',
       'data.ach.first-dino.name': 'First Fossil',
       'data.ach.first-dino.desc': 'Your first dinosaur hatched',
-      'data.ach.total-50.name': 'Junior Paleontologist',
+      'data.ach.total-50.name': 'Rookie Digger',
       'data.ach.total-50.desc': '50 correct answers total',
       'data.ach.total-200.name': 'Ancient History Buff',
       'data.ach.total-200.desc': '200 correct answers total',
@@ -1079,18 +1084,18 @@
         const suiteEl = document.createElement('div');
         suiteEl.style.margin = '12px 0';
         suiteEl.innerHTML = '<h3 style="margin:8px 0">' + suite.name + '</h3>';
-        for (const t of suite.tests) {
+        for (const test of suite.tests) {
           const testEl = document.createElement('div');
           testEl.style.padding = '4px 12px';
           try {
-            t.fn();
+            test.fn();
             testEl.style.color = 'green';
-            testEl.textContent = '✓ ' + t.name;
+            testEl.textContent = '✓ ' + test.name;
             passed++;
           } catch (err) {
             testEl.style.color = 'red';
-            testEl.textContent = '✗ ' + t.name + ' — ' + err.message;
-            console.error(suite.name + ' › ' + t.name, err);
+            testEl.textContent = '✗ ' + test.name + ' — ' + err.message;
+            console.error(suite.name + ' › ' + test.name, err);
             failed++;
           }
           suiteEl.appendChild(testEl);
@@ -1151,21 +1156,24 @@
     }
 
     const Storage = {
-      // Заполняется в load(): текст предупреждения, если с сохранением что-то не так.
-      loadWarning: null,
+      // Заполняется в load(): ключ словаря для предупреждения, если с
+      // сохранением что-то не так. Именно ключ, а не готовый текст — load()
+      // вызывается до setLang(), когда язык ещё не выставлен из сохранения,
+      // и t() тут заморозил бы предупреждение на стартовом языке навсегда.
+      loadWarningKey: null,
       load() {
-        Storage.loadWarning = null;
+        Storage.loadWarningKey = null;
         try {
           const raw = localStorage.getItem(STATE_KEY);
           const parsed = Storage._deserialize(raw);
           if (parsed === null) return createInitialState();
           const migrated = Storage._migrate(parsed);
           if (migrated) return migrated;
-          Storage.loadWarning = t('storage.unreadable');
+          Storage.loadWarningKey = 'storage.unreadable';
           return createInitialState();
         } catch (err) {
           console.warn('Storage.load failed', err);
-          Storage.loadWarning = t('storage.unreadable');
+          Storage.loadWarningKey = 'storage.unreadable';
           return createInitialState();
         }
       },
@@ -1201,7 +1209,7 @@
         // испорченных. Известные (от 1 до текущей) мигрируются молча, и это
         // условие не надо обновлять при подъёме STATE_VERSION.
         } else if (!(from >= 1 && from <= STATE_VERSION)) {
-          Storage.loadWarning = t('storage.otherVersion');
+          Storage.loadWarningKey = 'storage.otherVersion';
         }
         // Сохранения 1–2 версии играли по-русски; менять язык под уже
         // играющим человеком нельзя, поэтому не автоопределяем.
@@ -1318,15 +1326,15 @@
       });
 
       it('keeps progress from an unknown future version and warns', () => {
-        Storage.loadWarning = null;
+        Storage.loadWarningKey = null;
         const s = createInitialState();
         s.version = 999;
         s.player.xp = 500;
         const result = Storage._migrate(s);
         assertEq(result.player.xp, 500);
         assertEq(result.version, STATE_VERSION);
-        assert(Storage.loadWarning !== null, 'should warn about unknown version');
-        Storage.loadWarning = null;
+        assert(Storage.loadWarningKey !== null, 'should warn about unknown version');
+        Storage.loadWarningKey = null;
       });
 
       it('fills in fields missing from an older save', () => {
@@ -1968,19 +1976,29 @@
         assertEq(normalizeName('я'.repeat(50)).length, NAME_MAX_LEN);
       });
 
-      it('greetingFor подставляет имя после приветствия', () => {
-        const s = createInitialState();
-        s.player.name = 'Тимур';
-        const g = greetingFor(s);
-        assert(g.includes('Тимур'), g);
-        const greetings = [1, 2, 3, 4].map(i => I18N.ru['data.greeting.' + i]);
-        assert(greetings.some(x => g.startsWith(x)), g);
-        assert(g.endsWith('! 🦕'), g);
-      });
+      it('greetingFor работает на всех языках: имя подставляется, приветствие не теряется', () => {
+        // Спека требует проверить все три языка, не только тот, что активен
+        // в раннере: именно приветствие корейский переводчик вероятнее всего
+        // перестроит, потеряв часть шаблона или оставив висящую запятую.
+        const originalLang = getLang();
+        try {
+          for (const lang of LANGS) {
+            setLang(lang);
+            const greetings = Array.from({ length: GREETING_COUNT }, (_, i) => I18N[lang]['data.greeting.' + (i + 1)]);
 
-      it('без имени приветствие не остаётся с висящей запятой', () => {
-        const g = greetingFor(createInitialState());
-        assert(!g.includes(','), 'запятая без имени: ' + g);
+            const withName = createInitialState();
+            withName.player.name = 'Тимур';
+            const g = greetingFor(withName);
+            assert(g.includes('Тимур'), lang + ': имя не подставилось — ' + g);
+            assert(greetings.some(hello => g.startsWith(hello)), lang + ': приветствие потеряно — ' + g);
+
+            const gNoName = greetingFor(createInitialState());
+            assert(!gNoName.includes(','), lang + ': висящая запятая без имени — ' + gNoName);
+            assert(!/ {2}/.test(gNoName), lang + ': двойной пробел без имени — ' + gNoName);
+          }
+        } finally {
+          setLang(originalLang);
+        }
       });
 
       it('сохранение без поля name получает пустое имя, а не undefined', () => {
@@ -2395,8 +2413,19 @@
 
     describe('i18n: язык в сохранении', () => {
       it('новое состояние получает определённый язык', () => {
-        const s = createInitialState();
-        assert(LANGS.includes(s.settings.lang), s.settings.lang);
+        // Без подмены navigator.language тест не может упасть: detectLang()
+        // по построению всегда возвращает член LANGS. Подмена — как в
+        // соседнем тесте миграции ниже.
+        const had = Object.prototype.hasOwnProperty.call(navigator, 'language');
+        const was = navigator.language;
+        Object.defineProperty(navigator, 'language', { value: 'ko-KR', configurable: true });
+        try {
+          const s = createInitialState();
+          assertEq(s.settings.lang, 'ko');
+        } finally {
+          if (had) Object.defineProperty(navigator, 'language', { value: was, configurable: true, writable: true });
+          else delete navigator.language;
+        }
       });
 
       it('сохранение второй версии получает русский, а не автоопределение', () => {
@@ -2654,7 +2683,7 @@
 
     function greetingFor(state) {
       const name = normalizeName(state.player.name);
-      const hello = t('data.greeting.' + (1 + Math.floor(Math.random() * 4)));
+      const hello = t('data.greeting.' + (1 + Math.floor(Math.random() * GREETING_COUNT)));
       return name ? t('hub.greeting', { hello, name }) : t('hub.greetingNoName', { hello });
     }
 
@@ -2773,8 +2802,8 @@
       app.appendChild(header);
 
       // Предупреждение о проблемах с сохранением — если было
-      if (Storage.loadWarning) {
-        app.appendChild(banner(Storage.loadWarning, () => { Storage.loadWarning = null; }));
+      if (Storage.loadWarningKey) {
+        app.appendChild(banner(t(Storage.loadWarningKey), () => { Storage.loadWarningKey = null; }));
       }
 
       // Баннер про открытый тир — если он открылся во время прошлого раунда

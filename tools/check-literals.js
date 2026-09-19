@@ -14,9 +14,19 @@ function find(marker) {
   return i + 1;
 }
 
+// Первая строка с маркером «=== SECTION:» после данной строки (1-based),
+// либо конец файла, если следующей секции нет.
+function findSectionAfter(afterLine) {
+  for (let i = afterLine; i < lines.length; i++) {
+    if (lines[i].includes('=== SECTION:')) return i + 1;
+  }
+  return lines.length + 1;
+}
+
 const i18nStart = find('=== SECTION: I18N ===');
 const i18nEnd = find('=== SECTION: TEST INFRA ===');
 const devStart = find('=== SECTION: DEV ===');
+const devEnd = findSectionAfter(devStart);
 
 // Блок теста пропускаем целиком: describe( или it( открывает его, закрывает
 // строка «});» с тем же отступом. Границу считаем по отступу, а не по счёту
@@ -43,7 +53,7 @@ const offenders = [];
 lines.forEach((line, i) => {
   const n = i + 1;
   if (n > i18nStart && n < i18nEnd) return;   // словари
-  if (n > devStart) return;                    // dev-панель
+  if (n > devStart && n < devEnd) return;      // dev-панель
   if (inTest[i]) return;                       // тесты
   const code = line.replace(/\/\/.*$/, '');    // строчные комментарии
   const literals = code.match(LITERAL) || [];
