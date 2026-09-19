@@ -1538,7 +1538,9 @@
 
       it('greetingFor подставляет имя после приветствия', () => {
         const s = createInitialState();
-        s.player.name = 'Тимур'; const g = greetingFor(s); assert(g.includes('Тимур'), g);
+        s.player.name = 'Тимур';
+        const g = greetingFor(s);
+        assert(g.includes('Тимур'), g);
         const greetings = [1, 2, 3, 4].map(i => I18N.ru['data.greeting.' + i]);
         assert(greetings.some(x => g.startsWith(x)), g);
         assert(g.endsWith('! 🦕'), g);
@@ -1558,7 +1560,8 @@
       it('миграция не теряет уже введённое имя', () => {
         const s = createInitialState();
         s.version = 1;
-        s.player.name = 'Мария'; assertEq(Storage._migrate(s).player.name, 'Мария');
+        s.player.name = 'Мария';
+        assertEq(Storage._migrate(s).player.name, 'Мария');
       });
     });
 
@@ -1876,7 +1879,8 @@
 
       it('отсутствующая форма числа роняет тестовый режим', () => {
         let threw = false;
-        try { _render({ one: 'только одна форма' }, { n: 5 }); } catch (e) { threw = true; } assert(threw, 'нет ни many, ни other — должно бросать');
+        try { _render({ one: 'только одна форма' }, { n: 5 }); } catch (e) { threw = true; }
+        assert(threw, 'нет ни many, ни other — должно бросать');
       });
     });
 
@@ -1911,7 +1915,10 @@
       });
     });
 
-    describe('i18n: множественное число', () => { const RU = { one: '{n} пример', few: '{n} примера', many: '{n} примеров' }; const KO = { other: '문제 {n}개' }; const EN = { one: '{n} problem', other: '{n} problems' };
+    describe('i18n: множественное число', () => {
+      const RU = { one: '{n} пример', few: '{n} примера', many: '{n} примеров' };
+      const KO = { other: '문제 {n}개' };
+      const EN = { one: '{n} problem', other: '{n} problems' };
 
       it('русские формы', () => {
         const was = getLang(); setLang('ru');
@@ -2014,7 +2021,8 @@
       });
 
       it('баннер открытого тира собирает список множителей', () => {
-        assertEq(t('hub.tierUnlocked', { tier: 'средний', list: '×3, ×4' }), '🎉 Открыт средний уровень! Новые примеры: ×3, ×4');
+        assertEq(t('hub.tierUnlocked', { tier: 'средний', list: '×3, ×4' }),
+          '🎉 Открыт средний уровень! Новые примеры: ×3, ×4');
       });
     });
 
