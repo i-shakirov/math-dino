@@ -224,7 +224,6 @@
     const STATE_KEY = 'math-dino-state-v1';
     const STATE_VERSION = 2;
 
-    const GREETINGS = ['Привет', 'С возвращением', 'Здарова', 'Здравствуй'];
     const NAME_MAX_LEN = 20;
 
     // Тиры: какие первые множители (A) разрешены на каждом тире.
@@ -234,16 +233,15 @@
       [1, 2, 3, 4, 5, 10],            // 1 — Средний
       [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] // 2 — Сложный
     ];
-    const TIER_NAMES = ['Лёгкий', 'Средний', 'Сложный'];
 
     const LEVEL_THRESHOLDS = [
-      { level: 1, name: 'Стажёр',                xpToNext: 100 },
-      { level: 2, name: 'Юный палеонтолог',      xpToNext: 250 },
-      { level: 3, name: 'Опытный палеонтолог',   xpToNext: 500 },
-      { level: 4, name: 'Доктор наук',           xpToNext: 900 },
-      { level: 5, name: 'Хранитель парка',       xpToNext: 1500 },
-      { level: 6, name: 'Профессор',             xpToNext: 2500 },
-      { level: 7, name: 'Легенда',               xpToNext: Infinity }
+      { level: 1, xpToNext: 100 },
+      { level: 2, xpToNext: 250 },
+      { level: 3, xpToNext: 500 },
+      { level: 4, xpToNext: 900 },
+      { level: 5, xpToNext: 1500 },
+      { level: 6, xpToNext: 2500 },
+      { level: 7, xpToNext: Infinity }
     ];
 
     const FAST_THRESHOLD_MS = 5000;
@@ -264,41 +262,41 @@
     const FEEDBACK_MS_WRONG = 4000;
 
     const DINOS = [
-      { id: 'velociraptor',   image: 'velociraptor.webp',   emoji: '🦖', name: 'Велоцираптор',     fact: 'Самый быстрый — как ты, когда отвечаешь!' },
-      { id: 'stegosaurus',    image: 'stegosaurus.webp',    emoji: '🦕', name: 'Стегозавр',         fact: 'С пластинами на спине' },
-      { id: 'triceratops',    image: 'triceratops.webp',    emoji: '🦴', name: 'Трицератопс',       fact: 'Три рога на голове' },
-      { id: 'plesiosaurus',   image: 'plesiosaurus.webp',   emoji: '🐊', name: 'Плезиозавр',        fact: 'Морской охотник с длинной шеей' },
-      { id: 'pterodactyl',    image: 'pterodactyl.webp',    emoji: '🦅', name: 'Птеродактиль',      fact: 'Летал в небе, как птица' },
-      { id: 'brontosaurus',   image: 'brontosaurus.webp',   emoji: '🦕', name: 'Бронтозавр',        fact: 'Длинная шея, ел листья с верхушек' },
-      { id: 'ankylosaurus',   image: 'ankylosaurus.webp',   emoji: '🐢', name: 'Анкилозавр',        fact: 'С хвостом-булавой' },
-      { id: 'dilophosaurus',  image: 'dilophosaurus.webp',  emoji: '🦎', name: 'Дилофозавр',        fact: 'Двойной гребень на голове' },
-      { id: 'iguanodon',      image: 'iguanodon.webp',      emoji: '🦖', name: 'Игуанодон',         fact: 'Большой палец-шип на руке' },
-      { id: 'allosaurus',     image: 'allosaurus.webp',     emoji: '🦖', name: 'Аллозавр',          fact: 'Хищник юрского периода' },
-      { id: 'parasaurolophus',image: 'parasaurolophus.webp',emoji: '🦕', name: 'Паразауролоф',      fact: 'С трубкой на голове, гудел в неё' },
-      { id: 'spinosaurus',    image: 'spinosaurus.webp',    emoji: '🐊', name: 'Спинозавр',         fact: 'С парусом на спине, ловил рыбу' },
-      { id: 'diplodocus',     image: 'diplodocus.webp',     emoji: '🦕', name: 'Диплодок',          fact: 'Длинный, как два автобуса' },
-      { id: 'carnotaurus',    image: 'carnotaurus.webp',    emoji: '🦖', name: 'Карнотавр',         fact: 'С рогами как у быка' },
-      { id: 'gallimimus',     image: 'gallimimus.webp',     emoji: '🦖', name: 'Галлимим',          fact: 'Бегал быстро, как страус' },
-      { id: 'maiasaura',      image: 'maiasaura.webp',      emoji: '🦕', name: 'Майязавра',         fact: 'Заботливая мама динозавров' },
-      { id: 'pachycephalo',   image: 'pachycephalo.webp',   emoji: '🦖', name: 'Пахицефалозавр',    fact: 'Толстолобый, бодался' },
-      { id: 'mosasaurus',     image: 'mosasaurus.webp',     emoji: '🐊', name: 'Мозазавр',          fact: 'Гигантская морская ящерица' },
-      { id: 'brachiosaurus',  image: 'brachiosaurus.webp',  emoji: '🦕', name: 'Брахиозавр',        fact: 'Самый высокий, доставал до 5-го этажа' },
-      { id: 'tyrannosaurus',  image: 'tyrannosaurus.webp',  emoji: '🦖', name: 'Тираннозавр Рекс',  fact: 'Король динозавров — финальная награда!' }
+      { id: 'velociraptor',    image: 'velociraptor.webp',    emoji: '🦖' },
+      { id: 'stegosaurus',     image: 'stegosaurus.webp',     emoji: '🦕' },
+      { id: 'triceratops',     image: 'triceratops.webp',     emoji: '🦴' },
+      { id: 'plesiosaurus',    image: 'plesiosaurus.webp',    emoji: '🐊' },
+      { id: 'pterodactyl',     image: 'pterodactyl.webp',     emoji: '🦅' },
+      { id: 'brontosaurus',    image: 'brontosaurus.webp',    emoji: '🦕' },
+      { id: 'ankylosaurus',    image: 'ankylosaurus.webp',    emoji: '🐢' },
+      { id: 'dilophosaurus',   image: 'dilophosaurus.webp',   emoji: '🦎' },
+      { id: 'iguanodon',       image: 'iguanodon.webp',       emoji: '🦖' },
+      { id: 'allosaurus',      image: 'allosaurus.webp',      emoji: '🦖' },
+      { id: 'parasaurolophus', image: 'parasaurolophus.webp', emoji: '🦕' },
+      { id: 'spinosaurus',     image: 'spinosaurus.webp',     emoji: '🐊' },
+      { id: 'diplodocus',      image: 'diplodocus.webp',      emoji: '🦕' },
+      { id: 'carnotaurus',     image: 'carnotaurus.webp',     emoji: '🦖' },
+      { id: 'gallimimus',      image: 'gallimimus.webp',      emoji: '🦖' },
+      { id: 'maiasaura',       image: 'maiasaura.webp',       emoji: '🦕' },
+      { id: 'pachycephalo',    image: 'pachycephalo.webp',    emoji: '🦖' },
+      { id: 'mosasaurus',      image: 'mosasaurus.webp',      emoji: '🐊' },
+      { id: 'brachiosaurus',   image: 'brachiosaurus.webp',   emoji: '🦕' },
+      { id: 'tyrannosaurus',   image: 'tyrannosaurus.webp',   emoji: '🦖' }
     ];
 
     const ACHIEVEMENTS = [
-      { id: 'first-correct',    icon: '🥚', name: 'Первая трещина',        desc: 'Первый правильный ответ' },
-      { id: 'streak-fast-10',   icon: '⚡', name: 'Быстрее ветра',           desc: '10 быстрых правильных подряд' },
-      { id: 'streak-25',        icon: '🔥', name: 'Огненная серия',          desc: '25 правильных подряд' },
-      { id: 'first-dino',       icon: '🦴', name: 'Первая косточка',         desc: 'Первый вылупившийся динозавр' },
-      { id: 'total-50',         icon: '🦖', name: 'Палеонтолог-джуниор',     desc: '50 правильных всего' },
-      { id: 'total-200',        icon: '🦕', name: 'Любитель древности',      desc: '200 правильных всего' },
-      { id: 'table-master',     icon: '🏆', name: 'Знаток таблицы',          desc: 'Полностью выучить любую таблицу N×1..N×10' },
-      { id: 'learned-50',       icon: '📚', name: 'Эрудит',                  desc: 'Выучить 50 примеров' },
-      { id: 'daily-5',          icon: '🌅', name: 'Ранняя пташка',           desc: 'Зайти 5 дней подряд' },
-      { id: 'perfect-round',    icon: '🎯', name: 'Идеальный раунд',         desc: '10/10 в раунде, все быстрые' },
-      { id: 'tier-up-medium',   icon: '🎓', name: 'Открыт средний уровень',  desc: 'Перейти на средний тир' },
-      { id: 'all-100',          icon: '👑', name: 'Магистр',                 desc: 'Выучить все 100 примеров' }
+      { id: 'first-correct',  icon: '🥚' },
+      { id: 'streak-fast-10', icon: '⚡' },
+      { id: 'streak-25',      icon: '🔥' },
+      { id: 'first-dino',     icon: '🦴' },
+      { id: 'total-50',       icon: '🦖' },
+      { id: 'total-200',      icon: '🦕' },
+      { id: 'table-master',   icon: '🏆' },
+      { id: 'learned-50',     icon: '📚' },
+      { id: 'daily-5',        icon: '🌅' },
+      { id: 'perfect-round',  icon: '🎯' },
+      { id: 'tier-up-medium', icon: '🎓' },
+      { id: 'all-100',        icon: '👑' }
     ];
 
     // === SECTION: I18N ===
@@ -310,6 +308,98 @@
 
     // Словари заполняются задачами 3–6 (ru), 9 (en) и 10 (ko).
     const I18N = { ru: {}, ko: {}, en: {} };
+
+    I18N.ru = {
+      'data.greeting.1': 'Привет',
+      'data.greeting.2': 'С возвращением',
+      'data.greeting.3': 'Здарова',
+      'data.greeting.4': 'Здравствуй',
+
+      'data.tier.0': 'Лёгкий',
+      'data.tier.1': 'Средний',
+      'data.tier.2': 'Сложный',
+
+      // Форма для середины предложения: «Открыт средний уровень».
+      // Так уходит хак TIER_NAMES[tier].toLowerCase() — в английском он
+      // дал бы строчную букву в начале фразы, в корейском бессмыслен.
+      'data.tier.0.inline': 'лёгкий',
+      'data.tier.1.inline': 'средний',
+      'data.tier.2.inline': 'сложный',
+
+      'data.level.1': 'Стажёр',
+      'data.level.2': 'Юный палеонтолог',
+      'data.level.3': 'Опытный палеонтолог',
+      'data.level.4': 'Доктор наук',
+      'data.level.5': 'Хранитель парка',
+      'data.level.6': 'Профессор',
+      'data.level.7': 'Легенда',
+
+      'data.dino.velociraptor.name': 'Велоцираптор',
+      'data.dino.velociraptor.fact': 'Самый быстрый — как ты, когда отвечаешь!',
+      'data.dino.stegosaurus.name': 'Стегозавр',
+      'data.dino.stegosaurus.fact': 'С пластинами на спине',
+      'data.dino.triceratops.name': 'Трицератопс',
+      'data.dino.triceratops.fact': 'Три рога на голове',
+      'data.dino.plesiosaurus.name': 'Плезиозавр',
+      'data.dino.plesiosaurus.fact': 'Морской охотник с длинной шеей',
+      'data.dino.pterodactyl.name': 'Птеродактиль',
+      'data.dino.pterodactyl.fact': 'Летал в небе, как птица',
+      'data.dino.brontosaurus.name': 'Бронтозавр',
+      'data.dino.brontosaurus.fact': 'Длинная шея, ел листья с верхушек',
+      'data.dino.ankylosaurus.name': 'Анкилозавр',
+      'data.dino.ankylosaurus.fact': 'С хвостом-булавой',
+      'data.dino.dilophosaurus.name': 'Дилофозавр',
+      'data.dino.dilophosaurus.fact': 'Двойной гребень на голове',
+      'data.dino.iguanodon.name': 'Игуанодон',
+      'data.dino.iguanodon.fact': 'Большой палец-шип на руке',
+      'data.dino.allosaurus.name': 'Аллозавр',
+      'data.dino.allosaurus.fact': 'Хищник юрского периода',
+      'data.dino.parasaurolophus.name': 'Паразауролоф',
+      'data.dino.parasaurolophus.fact': 'С трубкой на голове, гудел в неё',
+      'data.dino.spinosaurus.name': 'Спинозавр',
+      'data.dino.spinosaurus.fact': 'С парусом на спине, ловил рыбу',
+      'data.dino.diplodocus.name': 'Диплодок',
+      'data.dino.diplodocus.fact': 'Длинный, как два автобуса',
+      'data.dino.carnotaurus.name': 'Карнотавр',
+      'data.dino.carnotaurus.fact': 'С рогами как у быка',
+      'data.dino.gallimimus.name': 'Галлимим',
+      'data.dino.gallimimus.fact': 'Бегал быстро, как страус',
+      'data.dino.maiasaura.name': 'Майязавра',
+      'data.dino.maiasaura.fact': 'Заботливая мама динозавров',
+      'data.dino.pachycephalo.name': 'Пахицефалозавр',
+      'data.dino.pachycephalo.fact': 'Толстолобый, бодался',
+      'data.dino.mosasaurus.name': 'Мозазавр',
+      'data.dino.mosasaurus.fact': 'Гигантская морская ящерица',
+      'data.dino.brachiosaurus.name': 'Брахиозавр',
+      'data.dino.brachiosaurus.fact': 'Самый высокий, доставал до 5-го этажа',
+      'data.dino.tyrannosaurus.name': 'Тираннозавр Рекс',
+      'data.dino.tyrannosaurus.fact': 'Король динозавров — финальная награда!',
+
+      'data.ach.first-correct.name': 'Первая трещина',
+      'data.ach.first-correct.desc': 'Первый правильный ответ',
+      'data.ach.streak-fast-10.name': 'Быстрее ветра',
+      'data.ach.streak-fast-10.desc': '10 быстрых правильных подряд',
+      'data.ach.streak-25.name': 'Огненная серия',
+      'data.ach.streak-25.desc': '25 правильных подряд',
+      'data.ach.first-dino.name': 'Первая косточка',
+      'data.ach.first-dino.desc': 'Первый вылупившийся динозавр',
+      'data.ach.total-50.name': 'Палеонтолог-джуниор',
+      'data.ach.total-50.desc': '50 правильных всего',
+      'data.ach.total-200.name': 'Любитель древности',
+      'data.ach.total-200.desc': '200 правильных всего',
+      'data.ach.table-master.name': 'Знаток таблицы',
+      'data.ach.table-master.desc': 'Полностью выучить любую таблицу N×1..N×10',
+      'data.ach.learned-50.name': 'Эрудит',
+      'data.ach.learned-50.desc': 'Выучить 50 примеров',
+      'data.ach.daily-5.name': 'Ранняя пташка',
+      'data.ach.daily-5.desc': 'Зайти 5 дней подряд',
+      'data.ach.perfect-round.name': 'Идеальный раунд',
+      'data.ach.perfect-round.desc': '10/10 в раунде, все быстрые',
+      'data.ach.tier-up-medium.name': 'Открыт средний уровень',
+      'data.ach.tier-up-medium.desc': 'Перейти на средний тир',
+      'data.ach.all-100.name': 'Магистр',
+      'data.ach.all-100.desc': 'Выучить все 100 примеров'
+    };
 
     let _lang = 'ru';
     function getLang() { return _lang; }
@@ -405,6 +495,13 @@
       }
       return _render(value, params);
     }
+
+    function dinoName(id) { return t('data.dino.' + id + '.name'); }
+    function dinoFact(id) { return t('data.dino.' + id + '.fact'); }
+    function achName(id)  { return t('data.ach.' + id + '.name'); }
+    function achDesc(id)  { return t('data.ach.' + id + '.desc'); }
+    function tierName(tier) { return t('data.tier.' + tier); }
+    function tierNameInline(tier) { return t('data.tier.' + tier + '.inline'); }
 
     // === SECTION: TEST INFRA ===
     // Простой test runner. Активируется ?test=1 в URL.
@@ -1337,7 +1434,8 @@
         s.player.name = 'Тимур';
         const g = greetingFor(s);
         assert(g.includes('Тимур'), g);
-        assert(GREETINGS.some(x => g.startsWith(x)), g);
+        const greetings = [1, 2, 3, 4].map(i => I18N.ru['data.greeting.' + i]);
+        assert(greetings.some(x => g.startsWith(x)), g);
         assert(g.endsWith('!'), g);
       });
 
@@ -1769,6 +1867,64 @@
       });
     });
 
+    describe('i18n: данные игры', () => {
+      it('имя и факт динозавра берутся из словаря', () => {
+        assertEq(dinoName('iguanodon'), 'Игуанодон');
+        assert(dinoFact('diplodocus').length > 0, 'факт диплодока пуст');
+      });
+
+      it('в DINOS больше нет текстовых полей', () => {
+        for (const d of DINOS) {
+          assertEq(d.name, undefined, 'у ' + d.id + ' остался name');
+          assertEq(d.fact, undefined, 'у ' + d.id + ' остался fact');
+        }
+      });
+
+      it('имя и условие ачивки берутся из словаря', () => {
+        assertEq(achName('first-correct'), 'Первая трещина');
+        assert(achDesc('all-100').length > 0, 'условие all-100 пусто');
+      });
+
+      it('в ACHIEVEMENTS больше нет текстовых полей', () => {
+        for (const a of ACHIEVEMENTS) {
+          assertEq(a.name, undefined, 'у ' + a.id + ' остался name');
+          assertEq(a.desc, undefined, 'у ' + a.id + ' остался desc');
+        }
+      });
+
+      it('у каждого динозавра и каждой ачивки есть запись в словаре', () => {
+        for (const d of DINOS) {
+          assert(I18N.ru['data.dino.' + d.id + '.name'] !== undefined, d.id);
+          assert(I18N.ru['data.dino.' + d.id + '.fact'] !== undefined, d.id);
+        }
+        for (const a of ACHIEVEMENTS) {
+          assert(I18N.ru['data.ach.' + a.id + '.name'] !== undefined, a.id);
+          assert(I18N.ru['data.ach.' + a.id + '.desc'] !== undefined, a.id);
+        }
+      });
+
+      it('названия уровней и тиров', () => {
+        assertEq(levelName(1), 'Стажёр');
+        assertEq(levelName(7), 'Легенда');
+        assertEq(tierName(0), 'Лёгкий');
+        assertEq(tierName(2), 'Сложный');
+      });
+
+      it('у тира есть форма для середины предложения', () => {
+        assertEq(tierNameInline(1), 'средний');
+        for (let tier = 0; tier < 3; tier++) {
+          assert(I18N.ru['data.tier.' + tier + '.inline'] !== undefined, 'тир ' + tier);
+        }
+      });
+
+      it('приветствие подставляет имя и не оставляет висящей запятой', () => {
+        const s = createInitialState();
+        s.player.name = 'Тимур';
+        assert(greetingFor(s).includes('Тимур'), greetingFor(s));
+        assert(!greetingFor(createInitialState()).includes(','), 'запятая без имени');
+      });
+    });
+
     // === SECTION: VIEWS ===
     function el(tag, attrs, ...children) {
       const e = document.createElement(tag);
@@ -1798,7 +1954,8 @@
 
     function greetingFor(state) {
       const name = normalizeName(state.player.name);
-      return name ? pickRandom(GREETINGS) + ', ' + name + '!' : pickRandom(GREETINGS) + '!';
+      const hello = t('data.greeting.' + (1 + Math.floor(Math.random() * 4)));
+      return name ? hello + ', ' + name + '!' : hello + '!';
     }
 
     function plural(n, one, few, many) {
@@ -1837,7 +1994,7 @@
     }
 
     function levelName(level) {
-      return LEVEL_THRESHOLDS[level - 1].name;
+      return t('data.level.' + level);
     }
 
     // Первый запуск: спрашиваем имя, пока его нет — на хаб не пускаем.
@@ -1921,7 +2078,7 @@
       if (_pendingTierBanner !== null) {
         const tier = _pendingTierBanner;
         _pendingTierBanner = null;
-        app.appendChild(banner('🎉 Открыт ' + TIER_NAMES[tier].toLowerCase() + ' уровень! Новые примеры: ' + newMultipliersFor(tier).map(n => '×' + n).join(', ')));
+        app.appendChild(banner('🎉 Открыт ' + tierNameInline(tier) + ' уровень! Новые примеры: ' + newMultipliersFor(tier).map(n => '×' + n).join(', ')));
       }
 
       // Баннер возвращения: только то, что реально надо повторить
@@ -2195,7 +2352,7 @@
       const a = ACHIEVEMENTS.find(x => x.id === achId);
       if (!a) return;
       const toast = el('div', { className: 'toast', onclick: () => toast.remove() },
-        a.icon + ' Новая ачивка: ' + a.name
+        a.icon + ' Новая ачивка: ' + achName(a.id)
       );
       toastStack().appendChild(toast);
       setTimeout(() => toast.remove(), 5000);
@@ -2204,7 +2361,7 @@
     function showTierUpAnimation(newTier) {
       const overlay = el('div', { className: 'levelup-overlay' });
       overlay.appendChild(el('div', { className: 'tierup-text' },
-        '🎓 Открыт ' + TIER_NAMES[newTier].toLowerCase() + ' уровень!',
+        '🎓 Открыт ' + tierNameInline(newTier) + ' уровень!',
         el('div', { className: 'tierup-sub' },
           'Новые примеры: ' + newMultipliersFor(newTier).map(n => '×' + n).join(', '))
       ));
@@ -2247,7 +2404,7 @@
       setTimeout(() => {
         overlay.innerHTML = '';
         overlay.appendChild(el('div', { className: 'hatch-dino' }, dinoVisual(dino, 'dino-lg')));
-        overlay.appendChild(el('div', { className: 'hatch-text' }, 'Новый динозавр: ' + dino.name + '!'));
+        overlay.appendChild(el('div', { className: 'hatch-text' }, 'Новый динозавр: ' + dinoName(dino.id) + '!'));
         const closeBtn = el('button', {
           className: 'btn btn-primary hatch-close',
           onclick: () => { overlay.remove(); done(); }
@@ -2409,7 +2566,7 @@
       const img = document.createElement('img');
       img.className = 'dino-img ' + sizeClass;
       img.src = dinoImagePath(dino, sizeClass);
-      img.alt = dino.name;
+      img.alt = dinoName(dino.id);
       img.draggable = false;
       img.loading = 'lazy';
       img.decoding = 'async';
@@ -2442,11 +2599,11 @@
 
     function openDinoDetailModal(dino) {
       const content = el('div');
-      content.appendChild(modalHeader(dino.name));
+      content.appendChild(modalHeader(dinoName(dino.id)));
       const visualWrap = el('div', { style: { textAlign: 'center', margin: '8px 0 16px' } });
       visualWrap.appendChild(dinoVisual(dino, 'dino-xl'));
       content.appendChild(visualWrap);
-      content.appendChild(el('div', { style: { fontSize: '20px', textAlign: 'center', color: '#5d4030' } }, dino.fact));
+      content.appendChild(el('div', { style: { fontSize: '20px', textAlign: 'center', color: '#5d4030' } }, dinoFact(dino.id)));
       showModal(content);
     }
 
@@ -2459,8 +2616,8 @@
         const item = el('div', { className: 'ach-item ' + (owned ? 'unlocked clickable' : 'locked'), onclick: owned ? () => openDinoDetailModal(d) : null },
           el('div', { className: 'icon' }, owned ? dinoVisual(d, 'dino-md') : '🥚'),
           el('div', { className: 'meta' },
-            el('div', { className: 'name' }, owned ? d.name : '???'),
-            el('div', { className: 'desc' }, owned ? d.fact : 'Реши ещё примеры — узнаешь!')
+            el('div', { className: 'name' }, owned ? dinoName(d.id) : '???'),
+            el('div', { className: 'desc' }, owned ? dinoFact(d.id) : 'Реши ещё примеры — узнаешь!')
           )
         );
         list.appendChild(item);
@@ -2474,8 +2631,8 @@
       content.appendChild(modalHeader('📊 Прогресс'));
 
       const tier = state.player.currentTier;
-      const tierName = TIER_NAMES[tier];
-      content.appendChild(el('p', null, 'Сейчас: ' + tierName + ' уровень'));
+      const tierLabel = tierName(tier);
+      content.appendChild(el('p', null, 'Сейчас: ' + tierLabel + ' уровень'));
 
       const tierPool = Engine.poolForTier(tier);
       const tierLearned = tierPool.filter(k => state.examples[k].learned).length;
@@ -2519,8 +2676,8 @@
         content.appendChild(el('div', { className: 'ach-item ' + (unlocked ? 'unlocked' : 'locked') },
           el('div', { className: 'icon' }, unlocked ? a.icon : '🔒'),
           el('div', { className: 'meta' },
-            el('div', { className: 'name' }, a.name),
-            el('div', { className: 'desc' }, a.desc)
+            el('div', { className: 'name' }, achName(a.id)),
+            el('div', { className: 'desc' }, achDesc(a.id))
           ),
           el('div', { className: 'ach-mark' }, unlocked ? '✓' : '')
         ));
