@@ -365,7 +365,7 @@ settings.title  settings.changeName  settings.language
 | velociraptor | Велоцираптор | 벨로키랍토르 | Velociraptor |
 | stegosaurus | Стегозавр | 스테고사우루스 | Stegosaurus |
 | triceratops | Трицератопс | 트리케라톱스 | Triceratops |
-| plesiosaur | Плезиозавр | 플레시오사우루스 | Plesiosaur |
+| plesiosaurus | Плезиозавр | 플레시오사우루스 | Plesiosaur |
 | pterodactyl | Птеродактиль | 프테로닥틸루스 | Pterodactyl |
 | brontosaurus | Бронтозавр | 브론토사우루스 | Brontosaurus |
 | ankylosaurus | Анкилозавр | 안킬로사우루스 | Ankylosaurus |
@@ -378,7 +378,7 @@ settings.title  settings.changeName  settings.language
 | carnotaurus | Карнотавр | 카르노타우루스 | Carnotaurus |
 | gallimimus | Галлимим | 갈리미무스 | Gallimimus |
 | maiasaura | Майязавра | 마이아사우라 | Maiasaura |
-| pachycephalosaurus | Пахицефалозавр | 파키케팔로사우루스 | Pachycephalosaurus |
+| pachycephalo | Пахицефалозавр | 파키케팔로사우루스 | Pachycephalosaurus |
 | mosasaurus | Мозазавр | 모사사우루스 | Mosasaurus |
 | brachiosaurus | Брахиозавр | 브라키오사우루스 | Brachiosaurus |
 | tyrannosaurus | Тираннозавр Рекс | 티라노사우루스 렉스 | Tyrannosaurus Rex |
@@ -395,14 +395,14 @@ settings.title  settings.changeName  settings.language
 | first-correct | Первая трещина | 알에 첫 금 | First Crack |
 | streak-fast-10 | Быстрее ветра | 바람보다 빠르게 | Faster than the Wind |
 | streak-25 | Огненная серия | 불타는 연속 기록 | Blazing Streak |
-| first-hatch | Первая косточка | 첫 화석 | First Fossil |
-| correct-50 | Палеонтолог-джуниор | 주니어 고생물학자 | Junior Paleontologist |
-| correct-200 | Любитель древности | 고대 마니아 | Ancient History Buff |
+| first-dino | Первая косточка | 첫 화석 | First Fossil |
+| total-50 | Палеонтолог-джуниор | 주니어 고생물학자 | Junior Paleontologist |
+| total-200 | Любитель древности | 고대 마니아 | Ancient History Buff |
 | table-master | Знаток таблицы | 구구단 척척박사 | Times-Table Whiz |
-| learn-50 | Эрудит | 박식가 | Scholar |
+| learned-50 | Эрудит | 박식가 | Scholar |
 | daily-5 | Ранняя пташка | 개근왕 | Early Bird |
 | perfect-round | Идеальный раунд | 완벽한 라운드 | Perfect Round |
-| tier-medium | Открыт средний уровень | 보통 단계 개방 | Medium Unlocked |
+| tier-up-medium | Открыт средний уровень | 보통 단계 개방 | Medium Unlocked |
 | all-100 | Магистр | 구구단 마스터 | Grand Master |
 
 Таблица умножения по-корейски — `구구단`, а одна её строка — `한 단`
