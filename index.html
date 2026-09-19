@@ -436,6 +436,34 @@
       'hub.nothingTitleTier': '🎉 Всё на этом уровне выучено!',
       'hub.nothingBody': 'Все примеры свежие, повторять пока нечего. Они вернутся через несколько дней — заходи проверить, что всё помнишь.',
 
+      'trainer.home': '← домой',
+      'trainer.streak': '🔥 серия: {n}',
+      'trainer.progress': 'Раунд: вопрос {i} из {total}',
+      'trainer.question': '{a} × {b} = ?',
+      'trainer.check': 'Проверить',
+      'trainer.timer': '⏱ {sec}с',
+      'trainer.timerZero': '⏱ 0.0с',
+      'trainer.correctFast': 'Молодец! +{xp} XP',
+      'trainer.correctSlow': 'Правильно, но подумай быстрее. +{xp} XP',
+      'trainer.remember': 'Запомни: {a} × {b} = {c}',
+      'trainer.next': 'Дальше →',
+      'trainer.newAch': 'Новая ачивка: {name}',
+      'trainer.tierUp': '🎓 Открыт {tier} уровень!',
+      'trainer.tierUpList': 'Новые примеры: {list}',
+      'trainer.levelUp': 'Lv.{level} — {name}! 🎉',
+      'trainer.newDino': 'Новый динозавр: {name}',
+      'trainer.hatchOk': 'Класс!',
+
+      'round.title': '🏁 Раунд закончен!',
+      'round.endedEarly': 'Примеры этого уровня закончились — раунд засчитан целиком.',
+      'round.correct': 'Правильно: {n} / {total}',
+      'round.fast': 'Из них быстро: {n}',
+      'round.xp': 'Получено: +{n} XP',
+      'round.streak': 'Серия: 🔥 {n}',
+      'round.egg': 'Яйцо: {progress}/{max}',
+      'round.allFresh': 'Пока всё выучено и свежо — примеры вернутся на повторение через несколько дней.',
+      'round.again': 'Ещё {n}! 🦖',
+
       'storage.unreadable': 'Сохранение не удалось прочитать, игра начата заново.',
       'storage.otherVersion': 'Сохранение от другой версии игры. Прогресс сохранён, но что-то может выглядеть непривычно.'
     };
@@ -1971,6 +1999,25 @@
       });
     });
 
+    describe('i18n: тренажёр', () => {
+      it('счётчик вопроса подставляет оба числа', () => {
+        assertEq(t('trainer.progress', { i: 3, total: 10 }), 'Раунд: вопрос 3 из 10');
+      });
+
+      it('таймер получает суффикс секунд', () => {
+        assertEq(t('trainer.timer', { sec: '1.4' }), '⏱ 1.4с');
+      });
+
+      it('подсказка с правильным ответом', () => {
+        assertEq(t('trainer.remember', { a: 7, b: 8, c: 56 }), 'Запомни: 7 × 8 = 56');
+      });
+
+      it('итог раунда', () => {
+        assertEq(t('round.correct', { n: 8, total: 10 }), 'Правильно: 8 / 10');
+        assertEq(t('round.egg', { progress: 12, max: 25 }), 'Яйцо: 12/25');
+      });
+    });
+
     // === SECTION: VIEWS ===
     function el(tag, attrs, ...children) {
       const e = document.createElement(tag);
@@ -2231,8 +2278,8 @@
       const filled = Math.max(0, Math.min(cells, Math.floor(eggCrack * cells / EGG_CRACKS_TO_HATCH)));
       const eggDots = '▰'.repeat(filled) + '▱'.repeat(cells - filled);
       const header = el('div', { className: 'trainer-header' },
-        el('button', { className: 'btn btn-secondary', onclick: returnToHub }, '← домой'),
-        el('div', null, '🔥 серия: ' + tr.state.player.streakAny),
+        el('button', { className: 'btn btn-secondary', onclick: returnToHub }, t('trainer.home')),
+        el('div', null, t('trainer.streak', { n: tr.state.player.streakAny })),
         el('div', null, '🥚 ' + eggDots)
       );
       app.appendChild(header);
@@ -2241,7 +2288,7 @@
       app.appendChild(qContainer);
 
       app.appendChild(el('div', { className: 'round-progress', id: 'round-progress' },
-        'Раунд: вопрос ' + (tr.roundIndex + 1) + ' из ' + ROUND_SIZE
+        t('trainer.progress', { i: tr.roundIndex + 1, total: ROUND_SIZE })
       ));
     }
 
@@ -2262,16 +2309,18 @@
 
       const c = document.getElementById('q-container');
       c.innerHTML = '';
-      c.appendChild(el('div', { className: 'q' }, q.a + ' × ' + q.b + ' = ?'));
+      c.appendChild(el('div', { className: 'q' }, t('trainer.question', { a: q.a, b: q.b })));
 
       const input = el('input', { type: 'number', inputmode: 'numeric', id: 'answer-input', autocomplete: 'off' });
       input.addEventListener('keydown', onAnswerKey);
       c.appendChild(el('div', { className: 'answer-row' },
         input,
-        el('button', { className: 'btn btn-check', id: 'answer-submit', onclick: submitAnswer }, 'Проверить')
+        el('button', { className: 'btn btn-check', id: 'answer-submit', onclick: submitAnswer }, t('trainer.check'))
       ));
 
-      c.appendChild(el('div', { className: 'timer', id: 'timer' }, '⏱ 0.0с'));
+      const timerEl = el('div', { className: 'timer', id: 'timer' });
+      timerEl.textContent = t('trainer.timerZero');
+      c.appendChild(timerEl);
       input.focus();
 
       // Секундомер: считает время вверх, ответ ничем не ограничен по времени.
@@ -2280,7 +2329,9 @@
       tr.timerInterval = setInterval(() => {
         if (!_trainer || _trainer.seq !== seq || _trainer.phase !== 'asking') return;
         const tEl = document.getElementById('timer');
-        if (tEl) tEl.textContent = '⏱ ' + ((Date.now() - _trainer.startTime) / 1000).toFixed(1) + 'с';
+        if (tEl) tEl.textContent = t('trainer.timer', {
+          sec: ((Date.now() - _trainer.startTime) / 1000).toFixed(1)
+        });
       }, 100);
     }
 
@@ -2333,9 +2384,13 @@
       if (submit) submit.disabled = true;
 
       let cls, msg, duration;
-      if (fast) { cls = 'correct'; msg = 'Молодец! +' + xpGained + ' XP'; duration = FEEDBACK_MS_FAST; }
-      else if (isCorrect) { cls = 'correct-slow'; msg = 'Правильно, но подумай быстрее. +' + xpGained + ' XP'; duration = FEEDBACK_MS_SLOW; }
-      else { cls = 'wrong'; msg = 'Запомни:'; duration = FEEDBACK_MS_WRONG; }
+      if (fast) { cls = 'correct'; msg = t('trainer.correctFast', { xp: xpGained }); duration = FEEDBACK_MS_FAST; }
+      else if (isCorrect) { cls = 'correct-slow'; msg = t('trainer.correctSlow', { xp: xpGained }); duration = FEEDBACK_MS_SLOW; }
+      else {
+        cls = 'wrong';
+        msg = t('trainer.remember', { a: tr.currentQuestion.a, b: tr.currentQuestion.b, c: correctAnswer });
+        duration = FEEDBACK_MS_WRONG;
+      }
       if (input) input.classList.add(cls);
 
       const c = document.getElementById('q-container');
@@ -2344,7 +2399,7 @@
         c.appendChild(el('div', { className: 'given-answer' }, String(given)));
         c.appendChild(el('div', { className: 'correct-answer' },
           tr.currentQuestion.a + ' × ' + tr.currentQuestion.b + ' = ' + correctAnswer));
-        c.appendChild(el('button', { className: 'btn btn-next', onclick: advance }, 'Дальше →'));
+        c.appendChild(el('button', { className: 'btn btn-next', onclick: advance }, t('trainer.next')));
       }
 
       runEventAnimations(events, () => scheduleAdvance(duration));
@@ -2404,7 +2459,7 @@
       const a = ACHIEVEMENTS.find(x => x.id === achId);
       if (!a) return;
       const toast = el('div', { className: 'toast', onclick: () => toast.remove() },
-        a.icon + ' Новая ачивка: ' + achName(a.id)
+        a.icon + ' ' + t('trainer.newAch', { name: achName(a.id) })
       );
       toastStack().appendChild(toast);
       setTimeout(() => toast.remove(), 5000);
@@ -2413,9 +2468,9 @@
     function showTierUpAnimation(newTier) {
       const overlay = el('div', { className: 'levelup-overlay' });
       overlay.appendChild(el('div', { className: 'tierup-text' },
-        '🎓 Открыт ' + tierNameInline(newTier) + ' уровень!',
+        t('trainer.tierUp', { tier: tierNameInline(newTier) }),
         el('div', { className: 'tierup-sub' },
-          'Новые примеры: ' + newMultipliersFor(newTier).map(n => '×' + n).join(', '))
+          t('trainer.tierUpList', { list: newMultipliersFor(newTier).map(n => '×' + n).join(', ') }))
       ));
       document.body.appendChild(overlay);
       spawnConfetti(40);
@@ -2425,7 +2480,7 @@
     function showLevelUpAnimation(newLevel) {
       const overlay = el('div', { className: 'levelup-overlay' });
       overlay.appendChild(el('div', { className: 'levelup-text' },
-        'Lv.' + newLevel + ' — ' + levelName(newLevel) + '! 🎉'
+        t('trainer.levelUp', { level: newLevel, name: levelName(newLevel) })
       ));
       document.body.appendChild(overlay);
       spawnConfetti(40);
@@ -2456,11 +2511,11 @@
       setTimeout(() => {
         overlay.innerHTML = '';
         overlay.appendChild(el('div', { className: 'hatch-dino' }, dinoVisual(dino, 'dino-lg')));
-        overlay.appendChild(el('div', { className: 'hatch-text' }, 'Новый динозавр: ' + dinoName(dino.id) + '!'));
+        overlay.appendChild(el('div', { className: 'hatch-text' }, t('trainer.newDino', { name: dinoName(dino.id) })));
         const closeBtn = el('button', {
           className: 'btn btn-primary hatch-close',
           onclick: () => { overlay.remove(); done(); }
-        }, 'Класс!');
+        }, t('trainer.hatchOk'));
         overlay.appendChild(closeBtn);
         spawnConfetti(60);
       }, 1500);
@@ -2504,24 +2559,24 @@
       const app = document.getElementById('app');
       app.innerHTML = '';
       const wrap = el('div', { className: 'round-end' },
-        el('h2', null, '🏁 Раунд закончен!'),
+        el('h2', null, t('round.title')),
         tr.endedEarly ? el('p', { className: 'round-end-note' },
-          'Примеры этого уровня закончились — раунд засчитан целиком.') : null,
+          t('round.endedEarly')) : null,
         el('div', { className: 'stats' },
-          el('div', null, 'Правильно: ' + correctCount + ' / ' + asked),
-          el('div', null, 'Из них быстро: ' + fastCount),
-          el('div', null, 'Получено: +' + tr.roundXPGained + ' XP'),
-          el('div', null, 'Серия: 🔥 ' + tr.state.player.streakAny),
-          el('div', null, 'Яйцо: ' + Math.min(eggCrack, EGG_CRACKS_TO_HATCH) + '/' + EGG_CRACKS_TO_HATCH)
+          el('div', null, t('round.correct', { n: correctCount, total: asked })),
+          el('div', null, t('round.fast', { n: fastCount })),
+          el('div', null, t('round.xp', { n: tr.roundXPGained })),
+          el('div', null, t('round.streak', { n: tr.state.player.streakAny })),
+          el('div', null, t('round.egg', { progress: Math.min(eggCrack, EGG_CRACKS_TO_HATCH), max: EGG_CRACKS_TO_HATCH }))
         ),
         nothingLeft ? el('p', { className: 'round-end-note' },
-          'Пока всё выучено и свежо — примеры вернутся на повторение через несколько дней.') : null,
+          t('round.allFresh')) : null,
         el('div', { className: 'actions' },
           nothingLeft ? null : el('button', {
             className: 'btn btn-primary btn-again',
             onclick: () => startRound(tr.state)
-          }, 'Ещё 10! 🦖'),
-          el('button', { className: 'btn btn-secondary', onclick: returnToHub }, '← Домой')
+          }, t('round.again', { n: ROUND_SIZE })),
+          el('button', { className: 'btn btn-secondary', onclick: returnToHub }, t('common.home'))
         )
       );
       app.appendChild(wrap);
