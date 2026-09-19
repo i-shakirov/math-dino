@@ -222,7 +222,7 @@
 
     // === SECTION: CONSTANTS ===
     const STATE_KEY = 'math-dino-state-v1';
-    const STATE_VERSION = 2;
+    const STATE_VERSION = 3;
 
     const NAME_MAX_LEN = 20;
 
@@ -721,7 +721,7 @@
           nextDinoIndex: 0
         },
         achievements: { unlocked: [] },
-        settings: { timeOffset: 0 }
+        settings: { timeOffset: 0, lang: detectLang() }
       };
     }
 
@@ -772,9 +772,12 @@
           if (egg && egg.crackProgress > EGG_CRACKS_TO_HATCH - 1) {
             egg.crackProgress = EGG_CRACKS_TO_HATCH - 1;
           }
-        } else if (from !== STATE_VERSION) {
+        } else if (from !== STATE_VERSION && from !== 2) {
           Storage.loadWarning = t('storage.otherVersion');
         }
+        // Сохранения 1–2 версии играли по-русски; менять язык под уже
+        // играющим человеком нельзя, поэтому не автоопределяем.
+        if (from < 3 && state.settings && !state.settings.lang) state.settings.lang = 'ru';
         return Storage._fillDefaults(state);
       },
       // Достраивает состояние до актуальной формы, сохраняя всё, что уже есть.
@@ -784,6 +787,7 @@
         out.version = STATE_VERSION;
         out.player = Object.assign({}, base.player, state.player);
         out.settings = Object.assign({}, base.settings, state.settings);
+        if (!LANGS.includes(out.settings.lang)) out.settings.lang = detectLang();
         out.achievements = Object.assign({}, base.achievements, state.achievements);
         out.collection = Object.assign({}, base.collection, state.collection);
         out.collection.activeEgg = Object.assign({}, base.collection.activeEgg,
@@ -871,7 +875,7 @@
         s.achievements.unlocked = ['first-dino'];
         s.examples['7x8'].learned = true;
         const result = Storage._migrate(s);
-        assertEq(result.version, 2);
+        assertEq(result.version, STATE_VERSION);
         assertEq(result.player.xp, 1234);
         assertEq(result.collection.dinosOwned, ['velociraptor', 'stegosaurus']);
         assertEq(result.achievements.unlocked, ['first-dino']);
@@ -1961,6 +1965,43 @@
       });
     });
 
+    describe('i18n: язык в сохранении', () => {
+      it('новое состояние получает определённый язык', () => {
+        const s = createInitialState();
+        assert(LANGS.includes(s.settings.lang), s.settings.lang);
+      });
+
+      it('сохранение второй версии получает русский, а не автоопределение', () => {
+        const s = createInitialState();
+        s.version = 2;
+        delete s.settings.lang;
+        assertEq(Storage._migrate(s).settings.lang, 'ru');
+      });
+
+      it('уже записанный язык миграция не трогает', () => {
+        const s = createInitialState();
+        s.version = 2;
+        s.settings.lang = 'ko';
+        assertEq(Storage._migrate(s).settings.lang, 'ko');
+      });
+
+      it('мусор в поле языка заменяется значением по умолчанию', () => {
+        const s = createInitialState();
+        s.settings.lang = 'xx';
+        assert(LANGS.includes(Storage._fillDefaults(s).settings.lang), 'xx прошёл');
+      });
+
+      it('миграция не теряет прогресс', () => {
+        const s = createInitialState();
+        s.version = 2;
+        s.player.xp = 420;
+        s.player.name = 'Тимур';
+        const out = Storage._migrate(s);
+        assertEq(out.player.xp, 420);
+        assertEq(out.player.name, 'Тимур');
+      });
+    });
+
     describe('i18n: данные игры', () => {
       it('имя и факт динозавра берутся из словаря', () => {
         assertEq(dinoName('iguanodon'), 'Игуанодон');
@@ -2866,6 +2907,9 @@
     }
 
     function confirmImport(incoming) {
+      // Язык принадлежит устройству, а не файлу: импорт, после которого
+      // интерфейс заговорил на другом языке, читается как поломка.
+      incoming.settings.lang = window.State.settings.lang;
       const dinos = incoming.collection.dinosOwned.length;
       const achs = incoming.achievements.unlocked.length;
       const content = el('div');
@@ -3058,6 +3102,7 @@
     document.addEventListener('DOMContentLoaded', () => {
       if (isTestMode()) { runTests(); return; }
       window.State = Storage.load();
+      setLang(window.State.settings.lang);
       const today = Engine.dateStringFromMs(Engine.now(window.State));
       Engine.handleDailyStreak(window.State, today);
       Storage.save(window.State);
