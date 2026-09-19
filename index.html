@@ -358,7 +358,8 @@
     }
 
     // Шаблон может быть строкой либо объектом форм числа.
-    // {이/가} и подобные берут слово из предыдущей подстановки.
+    // {이/가} и подобные смотрят на уже собранный текст перед собой —
+    // неважно, пришёл он параметром или написан в шаблоне буквой.
     function _render(value, params) {
       const p = params || {};
       let template = value;
@@ -370,12 +371,26 @@
           template = '';
         }
       }
-      let previous = '';
-      return String(template).replace(/\{([^{}]+)\}/g, (whole, name) => {
-        if (JOSA_PAIRS[name]) return josaFor(previous, name);
-        previous = p[name] === undefined ? '' : String(p[name]);
-        return previous;
-      });
+      let out = '';
+      let lastIndex = 0;
+      const text = String(template);
+      const re = /\{([^{}]+)\}/g;
+      let m;
+      while ((m = re.exec(text)) !== null) {
+        out += text.slice(lastIndex, m.index);
+        const name = m[1];
+        if (JOSA_PAIRS[name]) {
+          if (!out && isTestMode()) {
+            throw new Error('i18n: частице ' + name + ' не на что опереться');
+          }
+          out += josaFor(out, name);
+        } else {
+          out += p[name] === undefined ? '' : String(p[name]);
+        }
+        lastIndex = m.index + m[0].length;
+      }
+      out += text.slice(lastIndex);
+      return out;
     }
 
     function t(key, params) {
@@ -1657,6 +1672,23 @@
 
       it('строка без плейсхолдеров не меняется', () => {
         assertEq(_render('Просто текст', {}), 'Просто текст');
+      });
+
+      it('частица смотрит на текст перед собой, а не только на параметр', () => {
+        assertEq(_render('공룡{이/가} 태어났어요!', {}), '공룡이 태어났어요!');
+        assertEq(_render('공룡{은/는} 커요', {}), '공룡은 커요');
+      });
+
+      it('частице без предшествующего текста не на что опереться', () => {
+        let threw = false;
+        try { _render('{이/가} 뭐예요', {}); } catch (e) { threw = true; }
+        assert(threw, 'частица в начале шаблона должна бросать в тестовом режиме');
+      });
+
+      it('отсутствующая форма числа роняет тестовый режим', () => {
+        let threw = false;
+        try { _render({ one: 'только одна форма' }, { n: 5 }); } catch (e) { threw = true; }
+        assert(threw, 'нет ни many, ни other — должно бросать');
       });
     });
 
