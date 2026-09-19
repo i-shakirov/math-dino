@@ -29,6 +29,8 @@
     .lang-chip-btn { font-family: inherit; font-size: 13px; padding: 4px 8px; border: none; border-radius: 8px; background: none; color: #7c6a58; cursor: pointer; }
     .lang-chip-btn.is-current { background: #fff; color: #2d1810; font-weight: bold; }
     .settings-langs { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0 16px; }
+    .settings-langs .btn { font-size: 15px; padding: 10px 16px; }
+    .settings-langs .btn.is-current { background: #f97316; color: #fff; font-weight: bold; }
 
     /* XP bar */
     .xp-bar { background: rgba(255,255,255,0.7); padding: 10px 16px; border-radius: 12px; margin-bottom: 16px; }
@@ -2902,8 +2904,8 @@
       content.appendChild(el('p', { className: 'settings-hint settings-hint-gap' }, t('settings.language')));
       content.appendChild(el('div', { className: 'settings-langs' }, ...LANGS.map(code =>
         el('button', {
-          className: 'btn' + (code === getLang() ? ' btn-primary' : ''),
-          onclick: () => applyLang(code, state)
+          className: 'btn' + (code === getLang() ? ' is-current' : ''),
+          onclick: () => { if (code !== getLang()) applyLang(code, state); }
         }, LANG_NAMES[code])
       )));
       content.appendChild(el('p', { className: 'settings-hint settings-hint-gap' },
