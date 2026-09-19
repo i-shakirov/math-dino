@@ -25,10 +25,16 @@ const inTest = new Array(lines.length).fill(false);
 for (let i = 0; i < lines.length; i++) {
   const open = lines[i].match(/^(\s*)(?:describe|it)\s*\(/);
   if (!open) continue;
-  let end = lines.length - 1;
+  // Однострочный тест: открылся и закрылся на одной строке.
+  if (/\}\)\s*;?\s*$/.test(lines[i])) { inTest[i] = true; continue; }
+  let end = -1;
   for (let j = i + 1; j < lines.length; j++) {
     const close = lines[j].match(/^(\s*)\}\)/);
     if (close && close[1].length === open[1].length) { end = j; break; }
+  }
+  if (end === -1) {
+    console.error('Не найдено закрытие блока теста, строка ' + (i + 1) + ': ' + lines[i].trim());
+    process.exit(2);
   }
   for (let k = i; k <= end; k++) inTest[k] = true;
 }
