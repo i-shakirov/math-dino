@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Тренажёр динозавров</title>
+  <title>🦕</title>
   <style>
     /* === SECTION: CSS === */
     * { box-sizing: border-box; }
@@ -17,10 +17,18 @@
     }
     #app { max-width: 900px; margin: 0 auto; padding: 20px; }
 
+    /* Comic Sans не содержит хангыля: без этого цифры остались бы в нём,
+       а корейские буквы ушли бы в системный шрифт — две гарнитуры в строке. */
+    html[lang="ko"] body { font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans KR', sans-serif; }
+
     /* Header */
     .header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: rgba(255,255,255,0.7); border-radius: 12px; margin-bottom: 16px; }
     .header h1 { margin: 0; font-size: 22px; }
     .header-actions button { font-size: 24px; background: none; border: none; cursor: pointer; padding: 4px 8px; }
+    .lang-chip { display: inline-flex; gap: 2px; background: rgba(255,255,255,0.6); border-radius: 10px; padding: 2px; margin-right: 8px; }
+    .lang-chip-btn { font-family: inherit; font-size: 13px; padding: 4px 8px; border: none; border-radius: 8px; background: none; color: #7c6a58; cursor: pointer; }
+    .lang-chip-btn.is-current { background: #fff; color: #2d1810; font-weight: bold; }
+    .settings-langs { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0 16px; }
 
     /* XP bar */
     .xp-bar { background: rgba(255,255,255,0.7); padding: 10px 16px; border-radius: 12px; margin-bottom: 16px; }
@@ -216,7 +224,7 @@
   </style>
 </head>
 <body>
-  <div id="app">Загрузка...</div>
+  <div id="app">🦕</div>
   <script>
     'use strict';
 
@@ -310,6 +318,8 @@
     const I18N = { ru: {}, ko: {}, en: {} };
 
     I18N.ru = {
+      'app.title': 'Тренажёр динозавров',
+
       'data.greeting.1': 'Привет',
       'data.greeting.2': 'С возвращением',
       'data.greeting.3': 'Здарова',
@@ -481,6 +491,7 @@
 
       'settings.title': 'Настройки',
       'settings.changeName': '✏️ Изменить имя',
+      'settings.language': '🌐 Язык',
       'settings.backupNote': 'Прогресс хранится только в этом браузере. Сохрани копию, чтобы не потерять его при чистке истории браузера или переезде на другой компьютер.',
       'settings.export': '💾 Сохранить прогресс в файл',
       'settings.import': '📂 Загрузить прогресс из файла',
@@ -609,6 +620,19 @@
     function achDesc(id)  { return t('data.ach.' + id + '.desc'); }
     function tierName(tier) { return t('data.tier.' + tier); }
     function tierNameInline(tier) { return t('data.tier.' + tier + '.inline'); }
+
+    // Смена языка меняет весь экран, поэтому открытая модалка закрывается:
+    // showModal кладёт оверлей в document.body, а renderHub чистит только
+    // #app — без этого старая модалка пережила бы перерисовку.
+    function applyLang(lang, state) {
+      setLang(lang);
+      state.settings.lang = lang;
+      Storage.save(state);
+      document.documentElement.setAttribute('lang', lang);
+      document.title = t('app.title');
+      hideModal();
+      renderHub(state);
+    }
 
     // === SECTION: TEST INFRA ===
     // Простой test runner. Активируется ?test=1 в URL.
@@ -2232,6 +2256,12 @@
       const header = el('div', { className: 'header' },
         el('h1', null, greetingFor(state)),
         el('div', { className: 'header-actions' },
+          el('div', { className: 'lang-chip' }, ...LANGS.map(code =>
+            el('button', {
+              className: 'lang-chip-btn' + (code === getLang() ? ' is-current' : ''),
+              onclick: () => { if (code !== getLang()) applyLang(code, state); }
+            }, LANG_SHORT[code])
+          )),
           el('button', { onclick: () => openSettingsMenu(state) }, '⚙')
         )
       );
@@ -2869,6 +2899,13 @@
       content.appendChild(el('button', {
         className: 'btn settings-btn', onclick: () => openNameEditor(state)
       }, t('settings.changeName')));
+      content.appendChild(el('p', { className: 'settings-hint settings-hint-gap' }, t('settings.language')));
+      content.appendChild(el('div', { className: 'settings-langs' }, ...LANGS.map(code =>
+        el('button', {
+          className: 'btn' + (code === getLang() ? ' btn-primary' : ''),
+          onclick: () => applyLang(code, state)
+        }, LANG_NAMES[code])
+      )));
       content.appendChild(el('p', { className: 'settings-hint settings-hint-gap' },
         t('settings.backupNote')));
       content.appendChild(el('button', {
@@ -3114,6 +3151,8 @@
       if (isTestMode()) { runTests(); return; }
       window.State = Storage.load();
       setLang(window.State.settings.lang);
+      document.documentElement.setAttribute('lang', getLang());
+      document.title = t('app.title');
       const today = Engine.dateStringFromMs(Engine.now(window.State));
       Engine.handleDailyStreak(window.State, today);
       Storage.save(window.State);
