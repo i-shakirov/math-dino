@@ -673,11 +673,11 @@
       'trainer.hatchOk': '좋아요!',
 
       'round.title': '🏁 라운드 끝!',
-      'round.endedEarly': '이 단계에 남은 문제가 없어요. 그래도 결과는 그대로 남아요.',
+      'round.endedEarly': '이 단계에는 더 풀 문제가 없어요. 그래도 결과는 그대로 남아요.',
       'round.correct': '정답 {n} / {total}',
       'round.fast': '그중 빠른 정답 {n}개',
       'round.xp': '얻은 경험치 +{n}',
-      'round.streak': '최고 연속 🔥 {n}',
+      'round.streak': '연속 정답 🔥 {n}',
       'round.egg': '알 {progress}/{max}',
       'round.allFresh': '지금은 다 외워서 기억이 생생해요. 며칠 뒤에 복습 문제가 다시 나와요.',
       'round.again': '{n}문제 더! 🦖',
@@ -2592,7 +2592,9 @@
       it('регистр 해요체 без формальных форм', () => {
         for (const [k, v] of Object.entries(I18N.ko)) {
           const s = typeof v === 'object' ? Object.values(v).join(' ') : String(v);
-          assert(!/(습니다|ㅂ니다|입니다)/.test(s), 'формальный регистр в ' + k);
+          // Не перечислением окончаний: в живом 합니다 буква ㅂ — батчим
+          // внутри слога, отдельной джамо там нет, и /ㅂ니다/ его пропускает.
+          assert(!/[가-힣]니다/.test(s), 'формальный регистр в ' + k);
         }
       });
 
