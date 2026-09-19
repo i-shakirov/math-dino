@@ -464,8 +464,48 @@
       'round.allFresh': 'Пока всё выучено и свежо — примеры вернутся на повторение через несколько дней.',
       'round.again': 'Ещё {n}! 🦖',
 
-      'storage.unreadable': 'Сохранение не удалось прочитать, игра начата заново.',
-      'storage.otherVersion': 'Сохранение от другой версии игры. Прогресс сохранён, но что-то может выглядеть непривычно.'
+      'storage.unreadable': '⚠️ Сохранение не удалось прочитать, игра начата заново.',
+      'storage.otherVersion': '⚠️ Сохранение от другой версии игры. Прогресс сохранён, но что-то может выглядеть непривычно.',
+
+      'collection.title': 'Моя коллекция ({owned}/{total})',
+      'collection.locked': 'Реши ещё примеры — узнаешь!',
+
+      'progress.title': '📊 Прогресс',
+      'progress.currentTier': 'Сейчас: {tier} уровень',
+      'progress.toNextTier': 'До следующего уровня: {n} выучить',
+      'progress.byTables': 'Прогресс по таблицам',
+      'progress.known': 'Знаю ({n})',
+      'progress.learning': 'Учу ({n})',
+
+      'achModal.title': '🏆 Ачивки ({owned}/{total})',
+
+      'settings.title': 'Настройки',
+      'settings.changeName': '✏️ Изменить имя',
+      'settings.backupNote': 'Прогресс хранится только в этом браузере. Сохрани копию, чтобы не потерять его при чистке истории браузера или переезде на другой компьютер.',
+      'settings.export': '💾 Сохранить прогресс в файл',
+      'settings.import': '📂 Загрузить прогресс из файла',
+      'settings.reset': '🗑 Сбросить весь прогресс',
+
+      'io.failedTitle': 'Не получилось',
+      'io.unreadableFile': 'Файл не удалось прочитать.',
+      'io.notASave': 'Этот файл не похож на сохранение игры.',
+      'io.confirmTitle': 'Загрузить этот прогресс?',
+      'io.summary': 'В файле: Lv.{level}, {dinos}, {achs}.',
+      'io.willReplace': 'Текущий прогресс будет заменён.',
+      'io.load': 'Загрузить',
+      'io.understood': 'Понятно',
+
+      'reset.title': 'Точно стереть весь прогресс?',
+      'reset.willLose': 'Будет потеряно: Lv.{level}, {dinos}, {achs}.',
+      'reset.noUndo': 'Это нельзя отменить. Сначала можно сохранить копию в файл.',
+      'reset.confirm': 'Да, стереть',
+
+      'count.dinos': {
+        one: '{n} динозавр', few: '{n} динозавра', many: '{n} динозавров'
+      },
+      'count.achs': {
+        one: '{n} ачивка', few: '{n} ачивки', many: '{n} ачивок'
+      }
     };
 
     let _lang = 'ru';
@@ -1498,9 +1538,7 @@
 
       it('greetingFor подставляет имя после приветствия', () => {
         const s = createInitialState();
-        s.player.name = 'Тимур';
-        const g = greetingFor(s);
-        assert(g.includes('Тимур'), g);
+        s.player.name = 'Тимур'; const g = greetingFor(s); assert(g.includes('Тимур'), g);
         const greetings = [1, 2, 3, 4].map(i => I18N.ru['data.greeting.' + i]);
         assert(greetings.some(x => g.startsWith(x)), g);
         assert(g.endsWith('! 🦕'), g);
@@ -1520,21 +1558,7 @@
       it('миграция не теряет уже введённое имя', () => {
         const s = createInitialState();
         s.version = 1;
-        s.player.name = 'Мария';
-        assertEq(Storage._migrate(s).player.name, 'Мария');
-      });
-    });
-
-    describe('plural', () => {
-      const p = (n) => plural(n, 'пример', 'примера', 'примеров');
-      it('picks the right Russian form', () => {
-        assertEq(p(1), 'пример');
-        assertEq(p(2), 'примера');
-        assertEq(p(5), 'примеров');
-        assertEq(p(11), 'примеров');
-        assertEq(p(21), 'пример');
-        assertEq(p(112), 'примеров');
-        assertEq(p(0), 'примеров');
+        s.player.name = 'Мария'; assertEq(Storage._migrate(s).player.name, 'Мария');
       });
     });
 
@@ -1852,8 +1876,7 @@
 
       it('отсутствующая форма числа роняет тестовый режим', () => {
         let threw = false;
-        try { _render({ one: 'только одна форма' }, { n: 5 }); } catch (e) { threw = true; }
-        assert(threw, 'нет ни many, ни other — должно бросать');
+        try { _render({ one: 'только одна форма' }, { n: 5 }); } catch (e) { threw = true; } assert(threw, 'нет ни many, ни other — должно бросать');
       });
     });
 
@@ -1888,10 +1911,7 @@
       });
     });
 
-    describe('i18n: множественное число', () => {
-      const RU = { one: '{n} пример', few: '{n} примера', many: '{n} примеров' };
-      const KO = { other: '문제 {n}개' };
-      const EN = { one: '{n} problem', other: '{n} problems' };
+    describe('i18n: множественное число', () => { const RU = { one: '{n} пример', few: '{n} примера', many: '{n} примеров' }; const KO = { other: '문제 {n}개' }; const EN = { one: '{n} problem', other: '{n} problems' };
 
       it('русские формы', () => {
         const was = getLang(); setLang('ru');
@@ -1994,8 +2014,7 @@
       });
 
       it('баннер открытого тира собирает список множителей', () => {
-        assertEq(t('hub.tierUnlocked', { tier: 'средний', list: '×3, ×4' }),
-          '🎉 Открыт средний уровень! Новые примеры: ×3, ×4');
+        assertEq(t('hub.tierUnlocked', { tier: 'средний', list: '×3, ×4' }), '🎉 Открыт средний уровень! Новые примеры: ×3, ×4');
       });
     });
 
@@ -2048,14 +2067,6 @@
       const name = normalizeName(state.player.name);
       const hello = t('data.greeting.' + (1 + Math.floor(Math.random() * 4)));
       return name ? t('hub.greeting', { hello, name }) : t('hub.greetingNoName', { hello });
-    }
-
-    function plural(n, one, few, many) {
-      const mod100 = n % 100, mod10 = n % 10;
-      if (mod100 >= 11 && mod100 <= 14) return many;
-      if (mod10 === 1) return one;
-      if (mod10 >= 2 && mod10 <= 4) return few;
-      return many;
     }
 
     // Множители, которые появляются именно на этом тире.
@@ -2168,7 +2179,7 @@
 
       // Предупреждение о проблемах с сохранением — если было
       if (Storage.loadWarning) {
-        app.appendChild(banner('⚠️ ' + Storage.loadWarning, () => { Storage.loadWarning = null; }));
+        app.appendChild(banner(Storage.loadWarning, () => { Storage.loadWarning = null; }));
       }
 
       // Баннер про открытый тир — если он открылся во время прошлого раунда
@@ -2716,7 +2727,7 @@
 
     function openCollectionModal(state) {
       const content = el('div');
-      content.appendChild(modalHeader('Моя коллекция (' + state.collection.dinosOwned.length + '/' + DINOS.length + ')'));
+      content.appendChild(modalHeader(t('collection.title', { owned: state.collection.dinosOwned.length, total: DINOS.length })));
       const list = el('div');
       for (const d of DINOS) {
         const owned = isOwned(state, d);
@@ -2724,7 +2735,7 @@
           el('div', { className: 'icon' }, owned ? dinoVisual(d, 'dino-md') : '🥚'),
           el('div', { className: 'meta' },
             el('div', { className: 'name' }, owned ? dinoName(d.id) : '???'),
-            el('div', { className: 'desc' }, owned ? dinoFact(d.id) : 'Реши ещё примеры — узнаешь!')
+            el('div', { className: 'desc' }, owned ? dinoFact(d.id) : t('collection.locked'))
           )
         );
         list.appendChild(item);
@@ -2735,20 +2746,20 @@
 
     function openProgressModal(state) {
       const content = el('div');
-      content.appendChild(modalHeader('📊 Прогресс'));
+      content.appendChild(modalHeader(t('progress.title')));
 
       const tier = state.player.currentTier;
       const tierLabel = tierName(tier);
-      content.appendChild(el('p', null, 'Сейчас: ' + tierLabel + ' уровень'));
+      content.appendChild(el('p', null, t('progress.currentTier', { tier: tierLabel })));
 
       const tierPool = Engine.poolForTier(tier);
       const tierLearned = tierPool.filter(k => state.examples[k].learned).length;
       const needed = Math.ceil(tierPool.length * TIER_UNLOCK_PCT);
       if (tier < TIER_MULTIPLIERS.length - 1) {
-        content.appendChild(el('p', null, 'До следующего уровня: ' + Math.max(0, needed - tierLearned) + ' выучить'));
+        content.appendChild(el('p', null, t('progress.toNextTier', { n: Math.max(0, needed - tierLearned) })));
       }
 
-      content.appendChild(el('h3', null, 'Прогресс по таблицам'));
+      content.appendChild(el('h3', null, t('progress.byTables')));
       for (let n = 1; n <= 10; n++) {
         const unlocked = TIER_MULTIPLIERS[tier].includes(n);
         let learned = 0;
@@ -2767,9 +2778,9 @@
       const learningKeys = Object.entries(state.examples)
         .filter(([k,v]) => !v.learned && (v.correctFast + v.correctSlow + v.wrong) > 0)
         .map(([k]) => k);
-      content.appendChild(el('h3', null, 'Знаю (' + learnedKeys.length + ')'));
+      content.appendChild(el('h3', null, t('progress.known', { n: learnedKeys.length })));
       content.appendChild(el('p', { style: { fontSize: '14px' } }, learnedKeys.slice(0, 30).join(', ') + (learnedKeys.length > 30 ? ' …' : '')));
-      content.appendChild(el('h3', null, 'Учу (' + learningKeys.length + ')'));
+      content.appendChild(el('h3', null, t('progress.learning', { n: learningKeys.length })));
       content.appendChild(el('p', { style: { fontSize: '14px' } }, learningKeys.slice(0, 30).join(', ') + (learningKeys.length > 30 ? ' …' : '')));
 
       showModal(content);
@@ -2777,7 +2788,7 @@
 
     function openAchievementsModal(state) {
       const content = el('div');
-      content.appendChild(modalHeader('🏆 Ачивки (' + state.achievements.unlocked.length + '/' + ACHIEVEMENTS.length + ')'));
+      content.appendChild(modalHeader(t('achModal.title', { owned: state.achievements.unlocked.length, total: ACHIEVEMENTS.length })));
       for (const a of ACHIEVEMENTS) {
         const unlocked = state.achievements.unlocked.includes(a.id);
         content.appendChild(el('div', { className: 'ach-item ' + (unlocked ? 'unlocked' : 'locked') },
@@ -2794,21 +2805,21 @@
 
     function openSettingsMenu(state) {
       const content = el('div');
-      content.appendChild(modalHeader('Настройки'));
+      content.appendChild(modalHeader(t('settings.title')));
       content.appendChild(el('button', {
         className: 'btn settings-btn', onclick: () => openNameEditor(state)
-      }, '✏️ Изменить имя'));
+      }, t('settings.changeName')));
       content.appendChild(el('p', { className: 'settings-hint settings-hint-gap' },
-        'Прогресс хранится только в этом браузере. Сохрани копию, чтобы не потерять его при чистке истории браузера или переезде на другой компьютер.'));
+        t('settings.backupNote')));
       content.appendChild(el('button', {
         className: 'btn settings-btn', onclick: () => exportProgress(state)
-      }, '💾 Сохранить прогресс в файл'));
+      }, t('settings.export')));
       content.appendChild(el('button', {
         className: 'btn settings-btn', onclick: importProgress
-      }, '📂 Загрузить прогресс из файла'));
+      }, t('settings.import')));
       content.appendChild(el('button', {
         className: 'btn settings-btn settings-danger', onclick: () => confirmReset(state)
-      }, '🗑 Сбросить весь прогресс'));
+      }, t('settings.reset')));
       showModal(content);
     }
 
@@ -2830,12 +2841,12 @@
         picker.remove();
         if (!file) return;
         const reader = new FileReader();
-        reader.onerror = () => showMessageModal('Не получилось', 'Файл не удалось прочитать.');
+        reader.onerror = () => showMessageModal(t('io.failedTitle'), t('io.unreadableFile'));
         reader.onload = () => {
           const parsed = Storage._deserialize(String(reader.result));
           const migrated = parsed && Storage._migrate(parsed);
           if (!migrated) {
-            showMessageModal('Не получилось', 'Этот файл не похож на сохранение игры.');
+            showMessageModal(t('io.failedTitle'), t('io.notASave'));
             return;
           }
           confirmImport(migrated);
@@ -2850,19 +2861,19 @@
       const dinos = incoming.collection.dinosOwned.length;
       const achs = incoming.achievements.unlocked.length;
       const content = el('div');
-      content.appendChild(modalHeader('Загрузить этот прогресс?'));
-      content.appendChild(el('p', null,
-        'В файле: Lv.' + Engine.levelForXP(incoming.player.xp) + ', ' +
-        dinos + ' ' + plural(dinos, 'динозавр', 'динозавра', 'динозавров') + ', ' +
-        achs + ' ' + plural(achs, 'ачивка', 'ачивки', 'ачивок') + '.'
-      ));
-      content.appendChild(el('p', { style: { fontWeight: 'bold' } }, 'Текущий прогресс будет заменён.'));
+      content.appendChild(modalHeader(t('io.confirmTitle')));
+      content.appendChild(el('p', null, t('io.summary', {
+        level: Engine.levelForXP(incoming.player.xp),
+        dinos: t('count.dinos', { n: dinos }),
+        achs: t('count.achs', { n: achs })
+      })));
+      content.appendChild(el('p', { style: { fontWeight: 'bold' } }, t('io.willReplace')));
       const actions = el('div', { className: 'modal-actions' },
-        el('button', { className: 'btn', onclick: hideModal }, 'Отмена'),
+        el('button', { className: 'btn', onclick: hideModal }, t('common.cancel')),
         el('button', {
           className: 'btn btn-danger',
           onclick: () => { Storage.save(incoming); location.reload(); }
-        }, 'Загрузить')
+        }, t('io.load'))
       );
       content.appendChild(actions);
       showModal(content);
@@ -2873,28 +2884,28 @@
       content.appendChild(modalHeader(title));
       content.appendChild(el('p', null, text));
       content.appendChild(el('div', { className: 'modal-actions' },
-        el('button', { className: 'btn', onclick: hideModal }, 'Понятно')
+        el('button', { className: 'btn', onclick: hideModal }, t('io.understood'))
       ));
       showModal(content);
     }
 
     function confirmReset(state) {
       const content = el('div');
-      content.appendChild(modalHeader('Точно стереть весь прогресс?'));
+      content.appendChild(modalHeader(t('reset.title')));
       const dinos = state.collection.dinosOwned.length;
       const achs = state.achievements.unlocked.length;
-      content.appendChild(el('p', null,
-        'Будет потеряно: Lv.' + state.player.level + ', ' +
-        dinos + ' ' + plural(dinos, 'динозавр', 'динозавра', 'динозавров') + ', ' +
-        achs + ' ' + plural(achs, 'ачивка', 'ачивки', 'ачивок') + '.'
-      ));
-      content.appendChild(el('p', { style: { fontWeight: 'bold' } }, 'Это нельзя отменить. Сначала можно сохранить копию в файл.'));
+      content.appendChild(el('p', null, t('reset.willLose', {
+        level: state.player.level,
+        dinos: t('count.dinos', { n: dinos }),
+        achs: t('count.achs', { n: achs })
+      })));
+      content.appendChild(el('p', { style: { fontWeight: 'bold' } }, t('reset.noUndo')));
       const actions = el('div', { className: 'modal-actions' });
-      actions.appendChild(el('button', { className: 'btn', onclick: hideModal }, 'Отмена'));
+      actions.appendChild(el('button', { className: 'btn', onclick: hideModal }, t('common.cancel')));
       actions.appendChild(el('button', {
         className: 'btn btn-danger',
         onclick: () => { Storage.reset(); location.reload(); }
-      }, 'Да, стереть'));
+      }, t('reset.confirm')));
       content.appendChild(actions);
       showModal(content);
     }
