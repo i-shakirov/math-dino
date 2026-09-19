@@ -2401,16 +2401,20 @@
 
       it('сохранение второй версии получает русский, а не автоопределение', () => {
         // Без подмены тест бессмыслен: в раннере navigator.language = 'ru-RU',
-        // и автоопределение вернуло бы тот же 'ru', что и защита.
+        // и автоопределение вернуло бы тот же 'ru', что и защита. Подменяем
+        // свойством на самом объекте: в браузере navigator.language — геттер
+        // на прототипе, и простое присваивание бросило бы TypeError.
+        const had = Object.prototype.hasOwnProperty.call(navigator, 'language');
         const was = navigator.language;
-        navigator.language = 'ko-KR';
+        Object.defineProperty(navigator, 'language', { value: 'ko-KR', configurable: true });
         try {
           const s = createInitialState();
           s.version = 2;
           delete s.settings.lang;
           assertEq(Storage._migrate(s).settings.lang, 'ru');
         } finally {
-          navigator.language = was;
+          if (had) Object.defineProperty(navigator, 'language', { value: was, configurable: true, writable: true });
+          else delete navigator.language;
         }
       });
 
