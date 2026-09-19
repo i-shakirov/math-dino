@@ -7,6 +7,7 @@
   <style>
     /* === SECTION: CSS === */
     * { box-sizing: border-box; }
+    img { max-width: 100%; }
     body {
       margin: 0;
       font-family: 'Comic Sans MS', 'Comic Neue', system-ui, sans-serif;
@@ -30,7 +31,8 @@
     /* Buttons */
     .btn { font-family: inherit; font-size: 16px; padding: 12px 24px; border: none; border-radius: 12px; cursor: pointer; background: #fff; color: #2d1810; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
     .btn:hover { transform: translateY(-1px); }
-    .btn-primary { background: linear-gradient(135deg, #f97316, #ea580c); color: white; font-size: 28px; padding: 24px 48px; border-radius: 24px; font-weight: bold; animation: pulse 2s ease-in-out infinite; }
+    .btn-primary { background: linear-gradient(135deg, #f97316, #ea580c); color: white; font-size: clamp(20px, 5.5vw, 28px); padding: clamp(14px, 3.5vw, 24px) clamp(20px, 7vw, 48px); border-radius: 24px; font-weight: bold; animation: pulse 2s ease-in-out infinite; }
+    .btn-danger { background: #ef4444; color: #fff; }
     .btn-secondary { background: #fff7ed; }
     @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
 
@@ -59,13 +61,14 @@
       user-select: none;
       -webkit-user-drag: none;
     }
-    .dino-sm { width: 96px;  height: 96px;  object-fit: cover;   border-radius: 12px; }
-    .dino-md { width: 180px; height: 180px; object-fit: contain; border-radius: 16px; }
-    .dino-lg { width: 240px; height: 240px; object-fit: contain; border-radius: 20px; }
+    /* Ячейка коллекции сама задаёт размер — картинка её просто заполняет. */
+    .dino-sm { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; }
+    .dino-md { width: clamp(96px, 26vw, 180px); height: clamp(96px, 26vw, 180px); object-fit: contain; border-radius: 16px; }
+    .dino-lg { width: min(240px, 60vmin); height: min(240px, 60vmin); object-fit: contain; border-radius: 20px; }
     .dino-xl { width: min(480px, 70vmin); height: min(480px, 70vmin); object-fit: contain; border-radius: 24px; }
-    .dino-emoji.dino-sm { font-size: 72px;  line-height: 96px;  }
-    .dino-emoji.dino-md { font-size: 120px; line-height: 180px; }
-    .dino-emoji.dino-lg { font-size: 160px; line-height: 240px; }
+    .dino-emoji.dino-sm { font-size: clamp(28px, 8vw, 64px); line-height: 1; }
+    .dino-emoji.dino-md { font-size: clamp(64px, 18vw, 120px); line-height: 1; }
+    .dino-emoji.dino-lg { font-size: min(160px, 40vmin); line-height: 1; }
     .dino-emoji.dino-xl { font-size: min(320px, 50vmin); line-height: min(480px, 70vmin); }
 
     /* Footer buttons row */
@@ -75,8 +78,8 @@
     /* Trainer */
     .trainer-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: rgba(255,255,255,0.7); border-radius: 12px; margin-bottom: 32px; }
     .trainer-question { text-align: center; padding: 32px; background: rgba(255,255,255,0.7); border-radius: 16px; }
-    .trainer-question .q { font-size: 96px; font-weight: bold; margin: 16px 0; color: #2d1810; transition: color 0.2s; }
-    .trainer-question input { font-size: 64px; text-align: center; width: 200px; padding: 16px; border: 4px solid #e7d8c4; border-radius: 16px; font-family: inherit; }
+    .trainer-question .q { font-size: clamp(44px, 12vw, 96px); font-weight: bold; margin: 16px 0; color: #2d1810; transition: color 0.2s; white-space: nowrap; }
+    .trainer-question input { font-size: clamp(32px, 9vw, 64px); text-align: center; width: clamp(120px, 38vw, 200px); padding: 16px; border: 4px solid #e7d8c4; border-radius: 16px; font-family: inherit; }
     .trainer-question input:focus { outline: none; border-color: #f59e0b; }
     .trainer-question input.correct { border-color: #10b981; background: #d1fae5; animation: bounce 0.3s; }
     .trainer-question input.correct-slow { border-color: #f59e0b; background: #fef3c7; }
@@ -85,7 +88,7 @@
     @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
     .timer { font-size: 18px; color: #6b5642; margin-top: 16px; }
     .feedback-text { font-size: 24px; margin-top: 16px; min-height: 32px; }
-    .correct-answer { font-size: 56px; font-weight: bold; color: #ef4444; margin: 16px 0; }
+    .correct-answer { font-size: clamp(34px, 9vw, 56px); font-weight: bold; color: #ef4444; margin: 16px 0; white-space: nowrap; }
     .round-progress { text-align: center; padding: 12px; color: #6b5642; }
 
     /* Modal */
@@ -95,30 +98,39 @@
     .modal-header h2 { margin: 0; }
     .modal-close { font-size: 24px; background: none; border: none; cursor: pointer; }
 
-    /* Toast */
-    .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #fbbf24, #f59e0b); color: white; padding: 16px 24px; border-radius: 12px; z-index: 200; box-shadow: 0 4px 12px rgba(0,0,0,0.2); animation: slideDown 0.5s; cursor: pointer; }
-    @keyframes slideDown { from { transform: translate(-50%, -100%); } to { transform: translateX(-50%); } }
+    /* Toast — складываются в стопку, а не друг на друга */
+    .toast-stack { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 200; display: flex; flex-direction: column; align-items: center; gap: 8px; max-width: 92vw; }
+    .toast { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: white; padding: 16px 24px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); animation: slideDown 0.4s; cursor: pointer; text-align: center; }
+    @keyframes slideDown { from { transform: translateY(-140%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
     /* Confetti */
     .confetti { position: fixed; top: -20px; width: 8px; height: 8px; pointer-events: none; z-index: 150; }
     @keyframes confetti-fall { to { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
 
     /* Hatch animation overlay */
-    .hatch-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 250; }
+    .hatch-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 250; padding: 16px; }
     .hatch-egg { font-size: 120px; }
     .hatch-egg.cracking { animation: shake 0.3s 3; }
     .hatch-dino { font-size: 160px; opacity: 0; animation: zoom-in 1.5s 0.5s forwards; }
     @keyframes zoom-in { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-    .hatch-text { color: white; font-size: 32px; margin-top: 24px; opacity: 0; animation: fadeIn 1s 1s forwards; }
+    .hatch-text { color: white; font-size: clamp(20px, 5.5vw, 32px); text-align: center; max-width: 560px; margin-top: 24px; opacity: 0; animation: fadeIn 1s 1s forwards; }
     @keyframes fadeIn { to { opacity: 1; } }
 
     /* Level up overlay */
-    .levelup-overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 240; pointer-events: none; }
-    .levelup-text { font-size: 64px; font-weight: bold; color: #f59e0b; text-shadow: 0 4px 8px rgba(0,0,0,0.3); animation: zoom-in 0.6s; }
+    .levelup-overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 240; pointer-events: none; padding: 16px; }
+    /* Плашки «новый уровень» и «новый тир» — одинаковые карточки, чтобы длинные
+       названия уровней не расползались за края экрана. */
+    .levelup-text, .tierup-text {
+      font-weight: bold; text-align: center; overflow-wrap: break-word;
+      background: #fffbf0; padding: 24px 32px; border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25); max-width: min(90vw, 560px);
+      animation: zoom-in 0.6s;
+    }
+    .levelup-text { font-size: clamp(24px, 6vw, 44px); color: #d97706; }
 
     /* Banner */
-    .banner { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: white; padding: 12px 16px; border-radius: 12px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
-    .banner button { background: none; border: 1px solid white; color: white; padding: 4px 12px; border-radius: 6px; cursor: pointer; }
+    .banner { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: white; padding: 12px 16px; border-radius: 12px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+    .banner button { background: none; border: 1px solid white; color: white; padding: 4px 12px; border-radius: 6px; cursor: pointer; flex-shrink: 0; }
 
     /* Progress bars in modals */
     .table-row { display: flex; align-items: center; gap: 12px; padding: 6px 0; }
@@ -128,12 +140,68 @@
     .table-row .count { width: 50px; text-align: right; font-size: 14px; color: #6b5642; }
     .table-row.locked { opacity: 0.5; }
 
+    /* Ввод ответа */
+    .answer-row { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+    .btn-check { background: linear-gradient(135deg, #34d399, #10b981); color: #fff; font-size: 20px; font-weight: bold; padding: 16px 28px; }
+    .btn-check:disabled { opacity: 0.4; cursor: default; }
+    .btn-next { margin-top: 16px; background: #fff7ed; font-size: 20px; }
+    .given-answer { font-size: 40px; color: #ef4444; text-decoration: line-through; margin-top: 8px; }
+
+    /* Итог раунда и экран «всё выучено» */
+    .round-end { background: rgba(255,255,255,0.75); border-radius: 16px; padding: 32px 24px; text-align: center; margin-top: 24px; }
+    .round-end h2 { margin: 0 0 16px; font-size: clamp(24px, 6vw, 34px); }
+    .round-end .stats { display: inline-block; text-align: left; font-size: 20px; line-height: 1.8; margin: 8px 0 24px; }
+    .round-end-note { color: #6b5642; max-width: 420px; margin: 0 auto 20px; }
+    .round-end .actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .btn-again { font-size: 20px; padding: 16px 32px; }
+
+    /* Списки ачивок и динозавров в модалках */
+    .ach-item { display: flex; align-items: center; gap: 16px; padding: 10px 8px; border-radius: 12px; border-bottom: 1px solid #efe3d2; }
+    .ach-item:last-child { border-bottom: none; }
+    .ach-item .icon { font-size: 34px; width: auto; min-width: 48px; text-align: center; flex-shrink: 0; }
+    .ach-item .meta { flex: 1; min-width: 0; }
+    .ach-item .meta .name { font-weight: bold; }
+    .ach-item .meta .desc { font-size: 14px; color: #6b5642; }
+    .ach-item .ach-mark { color: #10b981; font-size: 22px; font-weight: bold; width: 24px; text-align: center; }
+    .ach-item.unlocked { background: linear-gradient(135deg, #fef3c7, #fde68a); }
+    .ach-item.locked { opacity: 0.55; filter: grayscale(1); }
+    .ach-item.clickable { cursor: pointer; }
+
+    /* Открытие тира */
+    .tierup-text { font-size: clamp(24px, 6vw, 40px); color: #b45309; }
+    .tierup-sub { font-size: clamp(16px, 4vw, 22px); color: #6b5642; margin-top: 10px; font-weight: normal; }
+
+    .hatch-close { margin-top: 24px; font-size: 20px; padding: 16px 32px; }
+    .play-hint { margin-top: 12px; color: #6b5642; font-size: 15px; }
+
+    /* Настройки */
+    .settings-hint { color: #6b5642; font-size: 14px; margin: 0 0 16px; }
+    .settings-btn { display: block; width: 100%; margin-top: 10px; text-align: left; }
+    .settings-danger { color: #b91c1c; }
+    .modal-actions { display: flex; gap: 12px; margin-top: 20px; }
+    .modal-actions .btn { flex: 1; }
+
     /* Dev panel */
     .dev-panel { position: fixed; bottom: 0; left: 0; right: 0; background: #1e1b18; color: #fff; padding: 12px 16px; z-index: 300; font-family: monospace; font-size: 13px; }
     .dev-panel h3 { margin: 0 0 8px 0; color: #fbbf24; }
     .dev-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
     .dev-btn { background: #374151; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
     .dev-btn:hover { background: #4b5563; }
+
+    /* Узкие экраны: игра рассчитана на десктоп, но вертикально ничего не должно ломаться */
+    @media (max-width: 560px) {
+      #app { padding: 12px; }
+      .header { flex-wrap: wrap; gap: 8px; }
+      .header h1 { font-size: clamp(15px, 4.6vw, 22px); }
+      .trainer-header { flex-wrap: wrap; gap: 8px; justify-content: center; text-align: center; }
+      .trainer-question { padding: 20px 12px; }
+      .collection-grid { gap: 6px; }
+      .footer-row { flex-direction: column; }
+      .modal { padding: 16px; }
+      .round-end { padding: 24px 14px; }
+      .round-end .stats { font-size: 17px; }
+      .ach-item { gap: 10px; }
+    }
   </style>
 </head>
 <body>
@@ -143,7 +211,7 @@
 
     // === SECTION: CONSTANTS ===
     const STATE_KEY = 'math-dino-state-v1';
-    const STATE_VERSION = 1;
+    const STATE_VERSION = 2;
 
     const GREETINGS = ['Привет', 'С возвращением', 'Здарова', 'Здравствуй'];
     const NAMES = ['Мария', 'Машуля', 'Мария Ивановна', 'Маша', 'Машенька'];
@@ -171,7 +239,7 @@
     const FRESHNESS_DAYS = 3;
     const FRESHNESS_MS = FRESHNESS_DAYS * 24 * 3600 * 1000;
     const STREAK_TO_LEARN = 3;
-    const EGG_CRACKS_TO_HATCH = 50;
+    const EGG_CRACKS_TO_HATCH = 25;
     const TIER_UNLOCK_PCT = 0.8;
     const ROUND_SIZE = 10;
     const ROUND_BONUS_XP = 50;
@@ -182,30 +250,29 @@
 
     const FEEDBACK_MS_FAST = 1200;
     const FEEDBACK_MS_SLOW = 1500;
-    const FEEDBACK_MS_WRONG = 10000;
-    const INPUT_TIMEOUT_MS = 20000;
+    const FEEDBACK_MS_WRONG = 4000;
 
     const DINOS = [
-      { id: 'velociraptor',   image: 'velociraptor.png',   emoji: '🦖', name: 'Велоцираптор',     fact: 'Самый быстрый — как ты, когда отвечаешь!' },
-      { id: 'stegosaurus',    image: 'stegosaurus.png',    emoji: '🦕', name: 'Стегозавр',         fact: 'С пластинами на спине' },
-      { id: 'triceratops',    image: 'triceratops.png',    emoji: '🦴', name: 'Трицератопс',       fact: 'Три рога на голове' },
-      { id: 'plesiosaurus',   image: 'plesiosaurus.png',   emoji: '🐊', name: 'Плезиозавр',        fact: 'Морской охотник с длинной шеей' },
-      { id: 'pterodactyl',    image: 'pterodactyl.png',    emoji: '🦅', name: 'Птеродактиль',      fact: 'Летал в небе, как птица' },
-      { id: 'brontosaurus',   image: 'brontosaurus.png',   emoji: '🦕', name: 'Бронтозавр',        fact: 'Длинная шея, ел листья с верхушек' },
-      { id: 'ankylosaurus',   image: 'ankylosaurus.png',   emoji: '🐢', name: 'Анкилозавр',        fact: 'С хвостом-булавой' },
-      { id: 'dilophosaurus',  image: 'dilophosaurus.png',  emoji: '🦎', name: 'Дилофозавр',        fact: 'Двойной гребень на голове' },
-      { id: 'iguanodon',      image: 'iguanodon.png',      emoji: '🦖', name: 'Игуанодон',         fact: 'Большой палец-шип на руке' },
-      { id: 'allosaurus',     image: 'allosaurus.png',     emoji: '🦖', name: 'Аллозавр',          fact: 'Хищник юрского периода' },
-      { id: 'parasaurolophus',image: 'parasaurolophus.png',emoji: '🦕', name: 'Паразауролоф',      fact: 'С трубкой на голове, гудел в неё' },
-      { id: 'spinosaurus',    image: 'spinosaurus.png',    emoji: '🐊', name: 'Спинозавр',         fact: 'С парусом на спине, ловил рыбу' },
-      { id: 'diplodocus',     image: 'diplodocus.png',     emoji: '🦕', name: 'Диплодок',          fact: 'Длинный, как два автобуса' },
-      { id: 'carnotaurus',    image: 'carnotaurus.png',    emoji: '🦖', name: 'Карнотавр',         fact: 'С рогами как у быка' },
-      { id: 'gallimimus',     image: 'gallimimus.png',     emoji: '🦖', name: 'Галлимим',          fact: 'Бегал быстро, как страус' },
-      { id: 'maiasaura',      image: 'maiasaura.png',      emoji: '🦕', name: 'Майязавра',         fact: 'Заботливая мама динозавров' },
-      { id: 'pachycephalo',   image: 'pachycephalo.png',   emoji: '🦖', name: 'Пахицефалозавр',    fact: 'Толстолобый, бодался' },
-      { id: 'mosasaurus',     image: 'mosasaurus.png',     emoji: '🐊', name: 'Мозазавр',          fact: 'Гигантская морская ящерица' },
-      { id: 'brachiosaurus',  image: 'brachiosaurus.png',  emoji: '🦕', name: 'Брахиозавр',        fact: 'Самый высокий, доставал до 5-го этажа' },
-      { id: 'tyrannosaurus',  image: 'tyrannosaurus.png',  emoji: '🦖', name: 'Тираннозавр Рекс',  fact: 'Король динозавров — финальная награда!' }
+      { id: 'velociraptor',   image: 'velociraptor.webp',   emoji: '🦖', name: 'Велоцираптор',     fact: 'Самый быстрый — как ты, когда отвечаешь!' },
+      { id: 'stegosaurus',    image: 'stegosaurus.webp',    emoji: '🦕', name: 'Стегозавр',         fact: 'С пластинами на спине' },
+      { id: 'triceratops',    image: 'triceratops.webp',    emoji: '🦴', name: 'Трицератопс',       fact: 'Три рога на голове' },
+      { id: 'plesiosaurus',   image: 'plesiosaurus.webp',   emoji: '🐊', name: 'Плезиозавр',        fact: 'Морской охотник с длинной шеей' },
+      { id: 'pterodactyl',    image: 'pterodactyl.webp',    emoji: '🦅', name: 'Птеродактиль',      fact: 'Летал в небе, как птица' },
+      { id: 'brontosaurus',   image: 'brontosaurus.webp',   emoji: '🦕', name: 'Бронтозавр',        fact: 'Длинная шея, ел листья с верхушек' },
+      { id: 'ankylosaurus',   image: 'ankylosaurus.webp',   emoji: '🐢', name: 'Анкилозавр',        fact: 'С хвостом-булавой' },
+      { id: 'dilophosaurus',  image: 'dilophosaurus.webp',  emoji: '🦎', name: 'Дилофозавр',        fact: 'Двойной гребень на голове' },
+      { id: 'iguanodon',      image: 'iguanodon.webp',      emoji: '🦖', name: 'Игуанодон',         fact: 'Большой палец-шип на руке' },
+      { id: 'allosaurus',     image: 'allosaurus.webp',     emoji: '🦖', name: 'Аллозавр',          fact: 'Хищник юрского периода' },
+      { id: 'parasaurolophus',image: 'parasaurolophus.webp',emoji: '🦕', name: 'Паразауролоф',      fact: 'С трубкой на голове, гудел в неё' },
+      { id: 'spinosaurus',    image: 'spinosaurus.webp',    emoji: '🐊', name: 'Спинозавр',         fact: 'С парусом на спине, ловил рыбу' },
+      { id: 'diplodocus',     image: 'diplodocus.webp',     emoji: '🦕', name: 'Диплодок',          fact: 'Длинный, как два автобуса' },
+      { id: 'carnotaurus',    image: 'carnotaurus.webp',    emoji: '🦖', name: 'Карнотавр',         fact: 'С рогами как у быка' },
+      { id: 'gallimimus',     image: 'gallimimus.webp',     emoji: '🦖', name: 'Галлимим',          fact: 'Бегал быстро, как страус' },
+      { id: 'maiasaura',      image: 'maiasaura.webp',      emoji: '🦕', name: 'Майязавра',         fact: 'Заботливая мама динозавров' },
+      { id: 'pachycephalo',   image: 'pachycephalo.webp',   emoji: '🦖', name: 'Пахицефалозавр',    fact: 'Толстолобый, бодался' },
+      { id: 'mosasaurus',     image: 'mosasaurus.webp',     emoji: '🐊', name: 'Мозазавр',          fact: 'Гигантская морская ящерица' },
+      { id: 'brachiosaurus',  image: 'brachiosaurus.webp',  emoji: '🦕', name: 'Брахиозавр',        fact: 'Самый высокий, доставал до 5-го этажа' },
+      { id: 'tyrannosaurus',  image: 'tyrannosaurus.webp',  emoji: '🦖', name: 'Тираннозавр Рекс',  fact: 'Король динозавров — финальная награда!' }
     ];
 
     const ACHIEVEMENTS = [
@@ -338,15 +405,21 @@
     }
 
     const Storage = {
+      // Заполняется в load(): текст предупреждения, если с сохранением что-то не так.
+      loadWarning: null,
       load() {
+        Storage.loadWarning = null;
         try {
           const raw = localStorage.getItem(STATE_KEY);
           const parsed = Storage._deserialize(raw);
           if (parsed === null) return createInitialState();
           const migrated = Storage._migrate(parsed);
-          return migrated || createInitialState();
+          if (migrated) return migrated;
+          Storage.loadWarning = 'Сохранение не удалось прочитать, игра начата заново.';
+          return createInitialState();
         } catch (err) {
           console.warn('Storage.load failed', err);
+          Storage.loadWarning = 'Сохранение не удалось прочитать, игра начата заново.';
           return createInitialState();
         }
       },
@@ -367,16 +440,47 @@
         if (!raw) return null;
         try { return JSON.parse(raw); } catch (err) { return null; }
       },
+      // Миграция никогда не стирает прогресс молча: незнакомую версию принимаем
+      // как есть, добивая недостающие поля значениями по умолчанию.
       _migrate(state) {
-        if (state.version === STATE_VERSION) return state;
-        return null;
+        if (!state || typeof state !== 'object' || !state.examples) return null;
+        const from = state.version;
+        if (from === 1) {
+          // v1 → v2: порог вылупления снижен с 50 до 25, подрезаем «перезревшие» яйца.
+          const egg = state.collection && state.collection.activeEgg;
+          if (egg && egg.crackProgress > EGG_CRACKS_TO_HATCH - 1) {
+            egg.crackProgress = EGG_CRACKS_TO_HATCH - 1;
+          }
+        } else if (from !== STATE_VERSION) {
+          Storage.loadWarning = 'Сохранение от другой версии игры. Прогресс сохранён, но что-то может выглядеть непривычно.';
+        }
+        return Storage._fillDefaults(state);
+      },
+      // Достраивает состояние до актуальной формы, сохраняя всё, что уже есть.
+      _fillDefaults(state) {
+        const base = createInitialState();
+        const out = Object.assign({}, base, state);
+        out.version = STATE_VERSION;
+        out.player = Object.assign({}, base.player, state.player);
+        out.settings = Object.assign({}, base.settings, state.settings);
+        out.achievements = Object.assign({}, base.achievements, state.achievements);
+        out.collection = Object.assign({}, base.collection, state.collection);
+        out.collection.activeEgg = Object.assign({}, base.collection.activeEgg,
+          state.collection && state.collection.activeEgg);
+        out.examples = {};
+        for (const key of Object.keys(base.examples)) {
+          out.examples[key] = Object.assign({}, base.examples[key], state.examples[key]);
+        }
+        // Уровень всегда выводится из XP — чтобы шапка и полоса не разъезжались.
+        out.player.level = Engine.levelForXP(out.player.xp);
+        return out;
       }
     };
 
     describe('createInitialState', () => {
-      it('initializes with version 1', () => {
+      it('initializes with the current state version', () => {
         const s = createInitialState();
-        assertEq(s.version, 1);
+        assertEq(s.version, STATE_VERSION);
       });
 
       it('creates 100 example entries with zero stats', () => {
@@ -430,17 +534,73 @@
     });
 
     describe('Storage.migrate', () => {
-      it('returns state unchanged if version matches', () => {
+      it('keeps state as is when version matches', () => {
         const s = createInitialState();
+        s.player.xp = 777;
         const result = Storage._migrate(s);
-        assertEq(result.version, 1);
-        assertEq(result, s);
+        assertEq(result.version, STATE_VERSION);
+        assertEq(result.player.xp, 777);
       });
 
-      it('returns null for state with future unknown version', () => {
+      it('v1 → v2 keeps all progress', () => {
+        const s = createInitialState();
+        s.version = 1;
+        s.player.xp = 1234;
+        s.collection.dinosOwned = ['velociraptor', 'stegosaurus'];
+        s.achievements.unlocked = ['first-dino'];
+        s.examples['7x8'].learned = true;
+        const result = Storage._migrate(s);
+        assertEq(result.version, 2);
+        assertEq(result.player.xp, 1234);
+        assertEq(result.collection.dinosOwned, ['velociraptor', 'stegosaurus']);
+        assertEq(result.achievements.unlocked, ['first-dino']);
+        assertEq(result.examples['7x8'].learned, true);
+      });
+
+      it('v1 → v2 clamps an egg filled under the old 50-crack threshold', () => {
+        const s = createInitialState();
+        s.version = 1;
+        s.collection.activeEgg.crackProgress = 43;
+        assertEq(Storage._migrate(s).collection.activeEgg.crackProgress, EGG_CRACKS_TO_HATCH - 1);
+      });
+
+      it('keeps progress from an unknown future version and warns', () => {
+        Storage.loadWarning = null;
         const s = createInitialState();
         s.version = 999;
-        assertEq(Storage._migrate(s), null);
+        s.player.xp = 500;
+        const result = Storage._migrate(s);
+        assertEq(result.player.xp, 500);
+        assertEq(result.version, STATE_VERSION);
+        assert(Storage.loadWarning !== null, 'should warn about unknown version');
+        Storage.loadWarning = null;
+      });
+
+      it('fills in fields missing from an older save', () => {
+        const s = createInitialState();
+        s.version = 1;
+        delete s.player.streakAny;
+        delete s.settings;
+        delete s.examples['3x4'].learnedAt;
+        const result = Storage._migrate(s);
+        assertEq(result.player.streakAny, 0);
+        assertEq(result.settings.timeOffset, 0);
+        assertEq(result.examples['3x4'].learnedAt, null);
+      });
+
+      it('rebuilds the full 100-example table and drops junk keys', () => {
+        const s = createInitialState();
+        s.examples['nonsense'] = { wrong: 5 };
+        delete s.examples['9x9'];
+        const result = Storage._migrate(s);
+        assertEq(Object.keys(result.examples).length, 100);
+        assert(!('nonsense' in result.examples), 'junk key should be dropped');
+        assertEq(result.examples['9x9'].wrong, 0);
+      });
+
+      it('returns null for garbage that is not a state object', () => {
+        assertEq(Storage._migrate(null), null);
+        assertEq(Storage._migrate({ hello: 'world' }), null);
       });
     });
 
@@ -472,6 +632,16 @@
         }
       }
       return result;
+    };
+
+    // Примеры, которые ребёнок уже видел и которые пора повторить.
+    // Новые (ни разу не показанные) сюда не попадают — см. §6.9 дизайна.
+    Engine.repeatPool = function(state) {
+      return Engine.poolForTier(state.player.currentTier).filter(key => {
+        const ex = state.examples[key];
+        const seen = (ex.correctFast + ex.correctSlow + ex.wrong) > 0;
+        return seen && Engine.weightFor(state, key) > 0;
+      });
     };
 
     Engine.gradeAnswer = function(state, key, isCorrect, elapsedMs) {
@@ -970,6 +1140,81 @@
       it('xp 100000 → level 7 (capped)', () => { assertEq(Engine.levelForXP(100000), 7); });
     });
 
+    describe('xpInLevel', () => {
+      const at = (xp) => { const s = createInitialState(); s.player.xp = xp; return xpInLevel(s); };
+
+      it('starts at 0 / 100 on level 1', () => {
+        assertEq(at(0), { level: 1, current: 0, max: 100, maxed: false });
+      });
+
+      it('starts a new band exactly when the level goes up', () => {
+        assertEq(at(99), { level: 1, current: 99, max: 100, maxed: false });
+        assertEq(at(100), { level: 2, current: 0, max: 150, maxed: false });
+        assertEq(at(250), { level: 3, current: 0, max: 250, maxed: false });
+      });
+
+      it('bar never disagrees with the level label', () => {
+        for (const xp of [0, 99, 100, 249, 250, 349, 350, 499, 500, 899, 900, 1499, 1500, 2499, 2500, 9999]) {
+          const bar = at(xp);
+          assertEq(bar.level, Engine.levelForXP(xp), 'level at xp=' + xp);
+          assert(bar.current >= 0, 'current must not be negative at xp=' + xp);
+          if (!bar.maxed) assert(bar.current < bar.max, 'current must stay inside the band at xp=' + xp);
+        }
+      });
+
+      it('marks the top level as maxed instead of showing Infinity', () => {
+        const bar = at(3000);
+        assertEq(bar.level, 7);
+        assertEq(bar.maxed, true);
+        assertEq(bar.max, null);
+        assertEq(bar.current, 500);
+      });
+    });
+
+    describe('Engine.repeatPool', () => {
+      it('is empty on a fresh state — nothing has been seen yet', () => {
+        assertEq(Engine.repeatPool(createInitialState()), []);
+      });
+
+      it('includes an example answered wrong', () => {
+        const s = createInitialState();
+        Engine.gradeAnswer(s, '2x3', false, 3000);
+        assert(Engine.repeatPool(s).includes('2x3'));
+      });
+
+      it('excludes a freshly learned example', () => {
+        const s = createInitialState();
+        for (let i = 0; i < 3; i++) Engine.gradeAnswer(s, '2x3', true, 3000);
+        assert(!Engine.repeatPool(s).includes('2x3'));
+      });
+
+      it('includes a learned example that went stale', () => {
+        const s = createInitialState();
+        for (let i = 0; i < 3; i++) Engine.gradeAnswer(s, '2x3', true, 3000);
+        s.examples['2x3'].lastSeen = Engine.now(s) - (FRESHNESS_DAYS + 1) * 24 * 3600 * 1000;
+        assert(Engine.repeatPool(s).includes('2x3'));
+      });
+
+      it('only looks at the current tier', () => {
+        const s = createInitialState();
+        Engine.gradeAnswer(s, '7x3', false, 3000);
+        assertEq(Engine.repeatPool(s), []);
+      });
+    });
+
+    describe('plural', () => {
+      const p = (n) => plural(n, 'пример', 'примера', 'примеров');
+      it('picks the right Russian form', () => {
+        assertEq(p(1), 'пример');
+        assertEq(p(2), 'примера');
+        assertEq(p(5), 'примеров');
+        assertEq(p(11), 'примеров');
+        assertEq(p(21), 'пример');
+        assertEq(p(112), 'примеров');
+        assertEq(p(0), 'примеров');
+      });
+    });
+
     describe('Engine.awardXP', () => {
       it('adds xp to player', () => {
         const s = createInitialState();
@@ -1014,9 +1259,9 @@
         assertEq(events, []);
       });
 
-      it('hatches at 50', () => {
+      it('hatches on the last crack', () => {
         const s = createInitialState();
-        s.collection.activeEgg.crackProgress = 49;
+        s.collection.activeEgg.crackProgress = EGG_CRACKS_TO_HATCH - 1;
         const events = Engine.crackEgg(s);
         assertEq(s.collection.activeEgg.crackProgress, 0);
         assertEq(s.collection.dinosOwned, ['velociraptor']);
@@ -1029,9 +1274,9 @@
       it('does nothing when all dinos collected', () => {
         const s = createInitialState();
         s.collection.nextDinoIndex = 20;
-        s.collection.activeEgg.crackProgress = 49;
+        s.collection.activeEgg.crackProgress = EGG_CRACKS_TO_HATCH - 1;
         const events = Engine.crackEgg(s);
-        assertEq(s.collection.activeEgg.crackProgress, 49);
+        assertEq(s.collection.activeEgg.crackProgress, EGG_CRACKS_TO_HATCH - 1);
         assertEq(events, []);
       });
     });
@@ -1244,9 +1489,9 @@
         assertEq(s.player.xp, 10);
       });
 
-      it('hatch event emitted when 50th crack', () => {
+      it('hatch event emitted on the last crack', () => {
         const s = createInitialState();
-        s.collection.activeEgg.crackProgress = 49;
+        s.collection.activeEgg.crackProgress = EGG_CRACKS_TO_HATCH - 1;
         const events = Engine.tick(s, '2x3', true, 3000);
         assert(events.some(e => e.type === 'hatch' && e.dinoId === 'velociraptor'));
       });
@@ -1263,6 +1508,7 @@
       const e = document.createElement(tag);
       if (attrs) {
         for (const [k, v] of Object.entries(attrs)) {
+          if (v == null) continue;
           if (k === 'onclick') e.addEventListener('click', v);
           else if (k === 'style' && typeof v === 'object') Object.assign(e.style, v);
           else if (k === 'className') e.className = v;
@@ -1280,15 +1526,39 @@
 
     function pickRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
+    function plural(n, one, few, many) {
+      const mod100 = n % 100, mod10 = n % 10;
+      if (mod100 >= 11 && mod100 <= 14) return many;
+      if (mod10 === 1) return one;
+      if (mod10 >= 2 && mod10 <= 4) return few;
+      return many;
+    }
+
+    // Множители, которые появляются именно на этом тире.
+    function newMultipliersFor(tier) {
+      const prev = tier > 0 ? TIER_MULTIPLIERS[tier - 1] : [];
+      return TIER_MULTIPLIERS[tier].filter(n => !prev.includes(n));
+    }
+
+    function banner(text, onClose) {
+      const box = el('div', { className: 'banner' },
+        el('span', null, text),
+        el('button', {
+          onclick: () => { box.remove(); if (onClose) onClose(); }
+        }, 'ОК')
+      );
+      return box;
+    }
+
+    // Прогресс внутри текущего уровня. xpToNext в LEVEL_THRESHOLDS — это
+    // суммарный XP до следующего уровня, поэтому вычитаем нижнюю границу.
     function xpInLevel(state) {
-      let cumulative = 0;
-      for (let i = 0; i < LEVEL_THRESHOLDS.length; i++) {
-        if (state.player.xp < cumulative + LEVEL_THRESHOLDS[i].xpToNext) {
-          return { current: state.player.xp - cumulative, max: LEVEL_THRESHOLDS[i].xpToNext };
-        }
-        cumulative += LEVEL_THRESHOLDS[i].xpToNext;
-      }
-      return { current: 1, max: 1 };
+      const level = Engine.levelForXP(state.player.xp);
+      const lower = level === 1 ? 0 : LEVEL_THRESHOLDS[level - 2].xpToNext;
+      const upper = LEVEL_THRESHOLDS[level - 1].xpToNext;
+      const current = state.player.xp - lower;
+      if (!isFinite(upper)) return { level, current, max: null, maxed: true };
+      return { level, current, max: upper - lower, maxed: false };
     }
 
     function levelName(level) {
@@ -1309,28 +1579,34 @@
       );
       app.appendChild(header);
 
-      // Banner: returning user with stuff to repeat
-      const stalePool = [];
-      for (const key of Engine.poolForTier(state.player.currentTier)) {
-        if (Engine.weightFor(state, key) > 0) stalePool.push(key);
+      // Предупреждение о проблемах с сохранением — если было
+      if (Storage.loadWarning) {
+        app.appendChild(banner('⚠️ ' + Storage.loadWarning, () => { Storage.loadWarning = null; }));
       }
-      if (state.player.dailyStreak >= 2 && stalePool.length > 0) {
-        const banner = el('div', { className: 'banner' },
-          el('span', null, '📅 С возвращением! Тебя ждёт ' + stalePool.length + ' примеров'),
-          el('button', { onclick: (e) => e.target.closest('.banner').remove() }, 'ОК')
-        );
-        app.appendChild(banner);
+
+      // Баннер про открытый тир — если он открылся во время прошлого раунда
+      if (_pendingTierBanner !== null) {
+        const tier = _pendingTierBanner;
+        _pendingTierBanner = null;
+        app.appendChild(banner('🎉 Открыт ' + TIER_NAMES[tier].toLowerCase() + ' уровень! Новые примеры: ' + newMultipliersFor(tier).map(n => '×' + n).join(', ')));
+      }
+
+      // Баннер возвращения: только то, что реально надо повторить
+      const repeatPool = Engine.repeatPool(state);
+      if (state.player.dailyStreak >= 2 && repeatPool.length > 0) {
+        app.appendChild(banner('📅 С возвращением! Тебя ждёт ' + repeatPool.length + ' ' +
+          plural(repeatPool.length, 'пример', 'примера', 'примеров') + ' на повторение'));
       }
 
       // XP bar
       const lvl = xpInLevel(state);
       const xpBar = el('div', { className: 'xp-bar' },
         el('div', { className: 'xp-bar-label' },
-          el('span', null, 'Lv.' + state.player.level + ' ' + levelName(state.player.level)),
-          el('span', null, lvl.current + ' / ' + lvl.max + ' XP')
+          el('span', null, 'Lv.' + lvl.level + ' ' + levelName(lvl.level)),
+          el('span', null, lvl.maxed ? (lvl.current + ' XP — максимум') : (lvl.current + ' / ' + lvl.max + ' XP'))
         ),
         el('div', { className: 'xp-bar-track' },
-          el('div', { className: 'xp-bar-fill', style: { width: (100 * lvl.current / lvl.max) + '%' } })
+          el('div', { className: 'xp-bar-fill', style: { width: (lvl.maxed ? 100 : 100 * lvl.current / lvl.max) + '%' } })
         )
       );
       app.appendChild(xpBar);
@@ -1340,7 +1616,12 @@
         className: 'btn btn-primary',
         onclick: () => startRound(state)
       }, '🦖 ПОИГРАТЬ!');
-      app.appendChild(el('div', { className: 'play-button-wrap' }, playBtn));
+      const nothingLeft = Engine.pickQuestion(state, null) === null;
+      app.appendChild(el('div', { className: 'play-button-wrap' },
+        playBtn,
+        nothingLeft ? el('div', { className: 'play-hint' },
+          'Всё выучено и свежо — примеры вернутся на повторение через несколько дней.') : null
+      ));
 
       // Placeholder divs for sub-renders
       app.appendChild(el('div', { id: 'hub-active-egg' }));
@@ -1350,28 +1631,50 @@
       renderActiveEgg(state);
       renderCollection(state);
       renderHubFooter(state);
+      if (isDevMode()) renderDevPanelInto();
     }
 
-    // Stubs — implemented in later tasks
-    function openSettingsMenu(state) { openSettingsMenuReal(state); }
+    // === SECTION: TRAINER ===
     let _trainer = null;
+    let _trainerSeq = 0;           // растёт с каждым раундом: таймеры прошлого раунда не действуют
+    let _pendingTierBanner = null; // тир, открытый во время раунда — покажем баннер на хабе
+    let _sessionCounted = false;   // sessionsCount++ один раз за сессию, а не за раунд
+
+    function stopTrainerTimers(t) {
+      if (!t) return;
+      if (t.timerInterval) { clearInterval(t.timerInterval); t.timerInterval = null; }
+      if (t.advanceTimer) { clearTimeout(t.advanceTimer); t.advanceTimer = null; }
+    }
+
+    // Обёртка для отложенных колбэков: срабатывает, только если раунд всё ещё тот же.
+    function forRound(seq, fn) {
+      return function () {
+        if (!_trainer || _trainer.seq !== seq) return;
+        fn();
+      };
+    }
 
     function startRound(state) {
+      stopTrainerTimers(_trainer);
       _trainer = {
         state,
-        roundNumber: 1,
+        seq: ++_trainerSeq,
         roundIndex: 0,
         roundResults: [],
         currentQuestion: null,
         startTime: 0,
         phase: 'asking',
         timerInterval: null,
-        timeoutTimer: null,
+        advanceTimer: null,
         lastKey: null,
-        roundXPGained: 0
+        roundXPGained: 0,
+        endedEarly: false
       };
-      state.player.sessionsCount++;
-      Storage.save(state);
+      if (!_sessionCounted) {
+        _sessionCounted = true;
+        state.player.sessionsCount++;
+        Storage.save(state);
+      }
       renderTrainer();
       pickAndShow();
     }
@@ -1381,8 +1684,10 @@
       const app = document.getElementById('app');
       app.innerHTML = '';
 
+      const cells = 5;
       const eggCrack = t.state.collection.activeEgg.crackProgress;
-      const eggDots = '▰'.repeat(Math.floor(eggCrack / 10)) + '▱'.repeat(5 - Math.floor(eggCrack / 10));
+      const filled = Math.max(0, Math.min(cells, Math.floor(eggCrack * cells / EGG_CRACKS_TO_HATCH)));
+      const eggDots = '▰'.repeat(filled) + '▱'.repeat(cells - filled);
       const header = el('div', { className: 'trainer-header' },
         el('button', { className: 'btn btn-secondary', onclick: returnToHub }, '← домой'),
         el('div', null, '🔥 серия: ' + t.state.player.streakAny),
@@ -1399,8 +1704,7 @@
     }
 
     function returnToHub() {
-      if (_trainer && _trainer.timerInterval) clearInterval(_trainer.timerInterval);
-      if (_trainer && _trainer.timeoutTimer) clearTimeout(_trainer.timeoutTimer);
+      stopTrainerTimers(_trainer);
       _trainer = null;
       renderHub(window.State);
     }
@@ -1408,90 +1712,60 @@
     function pickAndShow() {
       const t = _trainer;
       const q = Engine.pickQuestion(t.state, t.lastKey);
-      if (!q) {
-        showCongrats();
-        return;
-      }
+      if (!q) { finishRoundEarly(); return; }
+
       t.currentQuestion = q;
       t.phase = 'asking';
       t.startTime = Date.now();
+
       const c = document.getElementById('q-container');
       c.innerHTML = '';
       c.appendChild(el('div', { className: 'q' }, q.a + ' × ' + q.b + ' = ?'));
+
       const input = el('input', { type: 'number', inputmode: 'numeric', id: 'answer-input', autocomplete: 'off' });
-      c.appendChild(input);
-      const timer = el('div', { className: 'timer', id: 'timer' }, '⏱ 0.0с');
-      c.appendChild(timer);
       input.addEventListener('keydown', onAnswerKey);
+      c.appendChild(el('div', { className: 'answer-row' },
+        input,
+        el('button', { className: 'btn btn-check', id: 'answer-submit', onclick: submitAnswer }, 'Проверить')
+      ));
+
+      c.appendChild(el('div', { className: 'timer', id: 'timer' }, '⏱ 0.0с'));
       input.focus();
 
+      // Секундомер: считает время вверх, ответ ничем не ограничен по времени.
+      const seq = t.seq;
       if (t.timerInterval) clearInterval(t.timerInterval);
       t.timerInterval = setInterval(() => {
-        if (t.phase !== 'asking') return;
-        const elapsed = (Date.now() - t.startTime) / 1000;
-        const remaining = INPUT_TIMEOUT_MS / 1000 - elapsed;
+        if (!_trainer || _trainer.seq !== seq || _trainer.phase !== 'asking') return;
         const tEl = document.getElementById('timer');
-        if (tEl) tEl.textContent = '⏱ ' + Math.max(0, remaining).toFixed(1) + 'с';
+        if (tEl) tEl.textContent = '⏱ ' + ((Date.now() - _trainer.startTime) / 1000).toFixed(1) + 'с';
       }, 100);
-
-      if (t.timeoutTimer) clearTimeout(t.timeoutTimer);
-      t.timeoutTimer = setTimeout(gradeTimeout, INPUT_TIMEOUT_MS);
     }
 
     function onAnswerKey(ev) {
       if (ev.key !== 'Enter') return;
+      submitAnswer();
+    }
+
+    function submitAnswer() {
       const t = _trainer;
-      if (t.phase !== 'asking') return;
+      if (!t || t.phase !== 'asking') return;
       const input = document.getElementById('answer-input');
+      if (!input) return;
       const raw = input.value.trim();
-      if (raw === '') return;
+      if (raw === '') return;          // пустой ввод — не ошибка, просто игнорируем
       const answer = parseInt(raw, 10);
       if (isNaN(answer)) return;
       grade(answer);
-    }
-
-    function showCongrats() {
-      const app = document.getElementById('app');
-      app.innerHTML = '';
-      app.appendChild(el('div', { className: 'round-end' },
-        el('h2', null, '🎉 Ты выучила всё на этом уровне!'),
-        el('p', null, 'Открой следующий уровень, отвечая правильно на оставшиеся примеры.'),
-        el('button', { className: 'btn', onclick: returnToHub }, '← Домой')
-      ));
-    }
-
-    function gradeTimeout() {
-      const t = _trainer;
-      if (!t || t.phase !== 'asking') return;
-      t.phase = 'grading';
-      clearInterval(t.timerInterval);
-      clearTimeout(t.timeoutTimer);
-      const correctAnswer = t.currentQuestion.a * t.currentQuestion.b;
-      const xpBefore = t.state.player.xp;
-      const events = Engine.tick(t.state, t.currentQuestion.key, false, INPUT_TIMEOUT_MS);
-      Storage.save(t.state);
-      t.roundXPGained += t.state.player.xp - xpBefore;
-      t.roundResults.push({ correct: false, fast: false, key: t.currentQuestion.key, elapsed: INPUT_TIMEOUT_MS });
-      t.lastKey = t.currentQuestion.key;
-      // Show correct answer, same as wrong
-      const input = document.getElementById('answer-input');
-      if (input) input.disabled = true;
-      const c = document.getElementById('q-container');
-      if (c) {
-        c.appendChild(el('div', { className: 'feedback-text' }, 'Время вышло! Запомни:'));
-        c.appendChild(el('div', { className: 'correct-answer' }, t.currentQuestion.a + ' × ' + t.currentQuestion.b + ' = ' + correctAnswer));
-      }
-      t.phase = 'feedback';
-      runEventAnimations(events, () => { setTimeout(advance, FEEDBACK_MS_WRONG); });
     }
 
     function grade(answer) {
       const t = _trainer;
       if (t.phase !== 'asking') return;
       t.phase = 'grading';
+      stopTrainerTimers(t);
+
       const elapsed = Date.now() - t.startTime;
-      if (t.timerInterval) clearInterval(t.timerInterval);
-      if (t.timeoutTimer) { clearTimeout(t.timeoutTimer); t.timeoutTimer = null; }
       const correctAnswer = t.currentQuestion.a * t.currentQuestion.b;
       const isCorrect = (answer === correctAnswer);
       const fast = isCorrect && elapsed <= FAST_THRESHOLD_MS;
@@ -1502,50 +1776,86 @@
 
       const xpGained = t.state.player.xp - xpBefore;
       t.roundXPGained += xpGained;
-      t.roundResults.push({ correct: isCorrect, fast: fast, key: t.currentQuestion.key, elapsed });
+      t.roundResults.push({ correct: isCorrect, fast: fast, key: t.currentQuestion.key, elapsed: elapsed });
       t.lastKey = t.currentQuestion.key;
 
-      showFeedback(isCorrect, fast, correctAnswer, xpGained, events);
+      showFeedback(isCorrect, fast, answer, correctAnswer, xpGained, events);
     }
 
-    function showFeedback(isCorrect, fast, correctAnswer, xpGained, events) {
+    function showFeedback(isCorrect, fast, given, correctAnswer, xpGained, events) {
       const t = _trainer;
       t.phase = 'feedback';
       const input = document.getElementById('answer-input');
-      input.disabled = true;
+      const submit = document.getElementById('answer-submit');
+      if (input) input.disabled = true;
+      if (submit) submit.disabled = true;
 
       let cls, msg, duration;
       if (fast) { cls = 'correct'; msg = 'Молодец! +' + xpGained + ' XP'; duration = FEEDBACK_MS_FAST; }
       else if (isCorrect) { cls = 'correct-slow'; msg = 'Правильно, но подумай быстрее. +' + xpGained + ' XP'; duration = FEEDBACK_MS_SLOW; }
-      else { cls = 'wrong'; msg = 'Запомни: ' + t.currentQuestion.a + ' × ' + t.currentQuestion.b + ' = ' + correctAnswer; duration = FEEDBACK_MS_WRONG; }
-
-      input.classList.add(cls);
+      else { cls = 'wrong'; msg = 'Запомни:'; duration = FEEDBACK_MS_WRONG; }
+      if (input) input.classList.add(cls);
 
       const c = document.getElementById('q-container');
-      const fbEl = el('div', { className: 'feedback-text' }, msg);
-      c.appendChild(fbEl);
+      c.appendChild(el('div', { className: 'feedback-text' }, msg));
       if (!isCorrect) {
-        c.appendChild(el('div', { className: 'correct-answer' }, t.currentQuestion.a + ' × ' + t.currentQuestion.b + ' = ' + correctAnswer));
+        c.appendChild(el('div', { className: 'given-answer' }, String(given)));
+        c.appendChild(el('div', { className: 'correct-answer' },
+          t.currentQuestion.a + ' × ' + t.currentQuestion.b + ' = ' + correctAnswer));
+        c.appendChild(el('button', { className: 'btn btn-next', onclick: advance }, 'Дальше →'));
       }
 
-      runEventAnimations(events, () => {
-        setTimeout(advance, duration);
-      });
+      runEventAnimations(events, () => scheduleAdvance(duration));
+    }
+
+    function scheduleAdvance(delay) {
+      const t = _trainer;
+      if (!t) return;
+      if (t.advanceTimer) clearTimeout(t.advanceTimer);
+      t.advanceTimer = setTimeout(forRound(t.seq, advance), delay);
+    }
+
+    function advance() {
+      const t = _trainer;
+      if (!t || t.phase === 'advancing') return;
+      t.phase = 'advancing';
+      stopTrainerTimers(t);
+      t.roundIndex++;
+      if (t.roundIndex >= ROUND_SIZE) {
+        finishRound();
+      } else {
+        renderTrainer();
+        pickAndShow();
+      }
     }
 
     function runEventAnimations(events, done) {
       const hatch = events.find(e => e.type === 'hatch');
+      const tierUps = events.filter(e => e.type === 'tier-up');
       const achievements = events.filter(e => e.type === 'achievement');
       const levelUps = events.filter(e => e.type === 'level-up');
 
-      const playToasts = () => {
+      // Баннер про новый тир ждёт возвращения на хаб (см. §6.9 дизайна).
+      for (const tu of tierUps) _pendingTierBanner = tu.newTier;
+
+      const playRest = () => {
+        for (const tu of tierUps) showTierUpAnimation(tu.newTier);
         for (const a of achievements) showAchievementToast(a.id);
         for (const lu of levelUps) showLevelUpAnimation(lu.newLevel);
         done();
       };
 
-      if (hatch) showHatchAnimation(hatch.dinoId, playToasts);
-      else playToasts();
+      if (hatch) showHatchAnimation(hatch.dinoId, playRest);
+      else playRest();
+    }
+
+    function toastStack() {
+      let stack = document.getElementById('toast-stack');
+      if (!stack) {
+        stack = el('div', { id: 'toast-stack', className: 'toast-stack' });
+        document.body.appendChild(stack);
+      }
+      return stack;
     }
 
     function showAchievementToast(achId) {
@@ -1554,8 +1864,20 @@
       const toast = el('div', { className: 'toast', onclick: () => toast.remove() },
         a.icon + ' Новая ачивка: ' + a.name
       );
-      document.body.appendChild(toast);
-      setTimeout(() => toast.remove(), 4000);
+      toastStack().appendChild(toast);
+      setTimeout(() => toast.remove(), 5000);
+    }
+
+    function showTierUpAnimation(newTier) {
+      const overlay = el('div', { className: 'levelup-overlay' });
+      overlay.appendChild(el('div', { className: 'tierup-text' },
+        '🎓 Открыт ' + TIER_NAMES[newTier].toLowerCase() + ' уровень!',
+        el('div', { className: 'tierup-sub' },
+          'Новые примеры: ' + newMultipliersFor(newTier).map(n => '×' + n).join(', '))
+      ));
+      document.body.appendChild(overlay);
+      spawnConfetti(40);
+      setTimeout(() => overlay.remove(), 2600);
     }
 
     function showLevelUpAnimation(newLevel) {
@@ -1594,8 +1916,7 @@
         overlay.appendChild(el('div', { className: 'hatch-dino' }, dinoVisual(dino, 'dino-lg')));
         overlay.appendChild(el('div', { className: 'hatch-text' }, 'Новый динозавр: ' + dino.name + '!'));
         const closeBtn = el('button', {
-          className: 'btn btn-primary',
-          style: { marginTop: '24px', fontSize: '20px', padding: '16px 32px' },
+          className: 'btn btn-primary hatch-close',
           onclick: () => { overlay.remove(); done(); }
         }, 'Класс!');
         overlay.appendChild(closeBtn);
@@ -1603,54 +1924,79 @@
       }, 1500);
     }
 
-    function advance() {
+    // Примеры кончились посреди раунда: засчитываем то, что успели ответить.
+    function finishRoundEarly() {
       const t = _trainer;
-      t.roundIndex++;
-      if (t.roundIndex >= ROUND_SIZE) {
+      if (t.roundResults.length > 0) {
+        t.endedEarly = true;
         finishRound();
-      } else {
-        renderTrainer();
-        pickAndShow();
+        return;
       }
+      showNothingToPractice(t.state);
     }
 
     function finishRound() {
       const t = _trainer;
-      const bonus = ROUND_BONUS_XP;
-      Engine.awardXP(t.state, bonus);
-      t.roundXPGained += bonus;
+      const events = Engine.awardXP(t.state, ROUND_BONUS_XP);
+      t.roundXPGained += ROUND_BONUS_XP;
 
-      const allFast = t.roundResults.every(r => r.fast);
-      if (allFast && t.roundResults.length === ROUND_SIZE && !t.state.achievements.unlocked.includes('perfect-round')) {
+      const allFast = t.roundResults.length === ROUND_SIZE && t.roundResults.every(r => r.fast);
+      if (allFast && !t.state.achievements.unlocked.includes('perfect-round')) {
         t.state.achievements.unlocked.push('perfect-round');
+        events.push({ type: 'achievement', id: 'perfect-round' });
       }
+
       Storage.save(t.state);
       renderRoundEnd();
+      runEventAnimations(events, () => {});
     }
 
     function renderRoundEnd() {
       const t = _trainer;
+      const asked = t.roundResults.length;
       const correctCount = t.roundResults.filter(r => r.correct).length;
       const fastCount = t.roundResults.filter(r => r.fast).length;
       const eggCrack = t.state.collection.activeEgg.crackProgress;
+      const nothingLeft = Engine.pickQuestion(t.state, null) === null;
 
       const app = document.getElementById('app');
       app.innerHTML = '';
       const wrap = el('div', { className: 'round-end' },
         el('h2', null, '🏁 Раунд закончен!'),
+        t.endedEarly ? el('p', { className: 'round-end-note' },
+          'Примеры этого уровня закончились — раунд засчитан целиком.') : null,
         el('div', { className: 'stats' },
-          el('div', null, 'Правильно: ' + correctCount + ' / ' + ROUND_SIZE),
+          el('div', null, 'Правильно: ' + correctCount + ' / ' + asked),
           el('div', null, 'Из них быстро: ' + fastCount),
           el('div', null, 'Получено: +' + t.roundXPGained + ' XP'),
           el('div', null, 'Серия: 🔥 ' + t.state.player.streakAny),
-          el('div', null, 'Яйцо: ' + eggCrack + '/' + EGG_CRACKS_TO_HATCH)
+          el('div', null, 'Яйцо: ' + Math.min(eggCrack, EGG_CRACKS_TO_HATCH) + '/' + EGG_CRACKS_TO_HATCH)
         ),
+        nothingLeft ? el('p', { className: 'round-end-note' },
+          'Пока всё выучено и свежо — примеры вернутся на повторение через несколько дней.') : null,
         el('div', { className: 'actions' },
-          el('button', { className: 'btn btn-primary', style: { fontSize: '20px', padding: '16px 32px' }, onclick: () => startRound(t.state) }, 'Ещё 10! 🦖'),
+          nothingLeft ? null : el('button', {
+            className: 'btn btn-primary btn-again',
+            onclick: () => startRound(t.state)
+          }, 'Ещё 10! 🦖'),
           el('button', { className: 'btn btn-secondary', onclick: returnToHub }, '← Домой')
         )
       );
       app.appendChild(wrap);
+    }
+
+    function showNothingToPractice(state) {
+      const isLastTier = state.player.currentTier >= TIER_MULTIPLIERS.length - 1;
+      const app = document.getElementById('app');
+      app.innerHTML = '';
+      app.appendChild(el('div', { className: 'round-end' },
+        el('h2', null, isLastTier ? '🏆 Ты знаешь всю таблицу!' : '🎉 Ты выучила всё на этом уровне!'),
+        el('p', { className: 'round-end-note' },
+          'Все примеры свежие, повторять пока нечего. Они вернутся через несколько дней — заходи проверить, что всё помнишь.'),
+        el('div', { className: 'actions' },
+          el('button', { className: 'btn btn-secondary', onclick: returnToHub }, '← Домой')
+        )
+      ));
     }
 
     function renderActiveEgg(state) {
@@ -1663,7 +2009,7 @@
         ));
         return;
       }
-      const progress = state.collection.activeEgg.crackProgress;
+      const progress = Math.min(state.collection.activeEgg.crackProgress, EGG_CRACKS_TO_HATCH);
       target.appendChild(el('div', { className: 'active-egg' },
         el('span', { className: 'egg-emoji' }, '🥚'),
         el('div', { style: { flex: '1' } },
@@ -1675,6 +2021,10 @@
       ));
     }
 
+    function isOwned(state, dino) {
+      return state.collection.dinosOwned.indexOf(dino.id) !== -1;
+    }
+
     function renderCollection(state) {
       const target = document.getElementById('hub-collection');
       target.innerHTML = '';
@@ -1684,9 +2034,9 @@
         el('button', { className: 'btn btn-secondary', onclick: () => openCollectionModal(state) }, 'все →')
       ));
       const grid = el('div', { className: 'collection-grid' });
-      for (let i = 0; i < DINOS.length; i++) {
-        if (i < state.collection.dinosOwned.length) {
-          grid.appendChild(el('div', { className: 'collection-cell owned', onclick: () => openDinoDetailModal(DINOS[i]) }, dinoVisual(DINOS[i], 'dino-sm')));
+      for (const dino of DINOS) {
+        if (isOwned(state, dino)) {
+          grid.appendChild(el('div', { className: 'collection-cell owned', onclick: () => openDinoDetailModal(dino) }, dinoVisual(dino, 'dino-sm')));
         } else {
           grid.appendChild(el('div', { className: 'collection-cell locked' }, '🥚'));
         }
@@ -1695,7 +2045,6 @@
       target.appendChild(section);
     }
 
-    function openCollectionModal(state) { openCollectionModalReal(state); }
 
     function renderHubFooter(state) {
       const target = document.getElementById('hub-footer');
@@ -1712,10 +2061,13 @@
       target.appendChild(row);
     }
 
-    function openAchievementsModal(state) { openAchievementsModalReal(state); }
-    function openProgressModal(state) { openProgressModalReal(state); }
 
     let _modalEl = null;
+
+    // Мелкие ячейки коллекции берут лёгкую превьюшку, крупные виды — полный файл.
+    function dinoImagePath(dino, sizeClass) {
+      return (sizeClass === 'dino-sm' ? 'images/thumbs/' : 'images/') + dino.image;
+    }
 
     function dinoVisual(dino, sizeClass) {
       if (!dino.image) {
@@ -1723,9 +2075,11 @@
       }
       const img = document.createElement('img');
       img.className = 'dino-img ' + sizeClass;
-      img.src = 'images/' + dino.image;
+      img.src = dinoImagePath(dino, sizeClass);
       img.alt = dino.name;
       img.draggable = false;
+      img.loading = 'lazy';
+      img.decoding = 'async';
       img.addEventListener('error', function() {
         const fallback = el('span', { className: 'dino-emoji ' + sizeClass }, dino.emoji);
         img.replaceWith(fallback);
@@ -1763,14 +2117,13 @@
       showModal(content);
     }
 
-    function openCollectionModalReal(state) {
+    function openCollectionModal(state) {
       const content = el('div');
       content.appendChild(modalHeader('Моя коллекция (' + state.collection.dinosOwned.length + '/' + DINOS.length + ')'));
       const list = el('div');
-      for (let i = 0; i < DINOS.length; i++) {
-        const d = DINOS[i];
-        const owned = i < state.collection.dinosOwned.length;
-        const item = el('div', { className: 'ach-item ' + (owned ? 'unlocked' : 'locked') },
+      for (const d of DINOS) {
+        const owned = isOwned(state, d);
+        const item = el('div', { className: 'ach-item ' + (owned ? 'unlocked clickable' : 'locked'), onclick: owned ? () => openDinoDetailModal(d) : null },
           el('div', { className: 'icon' }, owned ? dinoVisual(d, 'dino-md') : '🥚'),
           el('div', { className: 'meta' },
             el('div', { className: 'name' }, owned ? d.name : '???'),
@@ -1783,7 +2136,7 @@
       showModal(content);
     }
 
-    function openProgressModalReal(state) {
+    function openProgressModal(state) {
       const content = el('div');
       content.appendChild(modalHeader('📊 Прогресс'));
 
@@ -1825,47 +2178,121 @@
       showModal(content);
     }
 
-    function openAchievementsModalReal(state) {
+    function openAchievementsModal(state) {
       const content = el('div');
       content.appendChild(modalHeader('🏆 Ачивки (' + state.achievements.unlocked.length + '/' + ACHIEVEMENTS.length + ')'));
       for (const a of ACHIEVEMENTS) {
         const unlocked = state.achievements.unlocked.includes(a.id);
         content.appendChild(el('div', { className: 'ach-item ' + (unlocked ? 'unlocked' : 'locked') },
-          el('div', { className: 'icon' }, a.icon),
+          el('div', { className: 'icon' }, unlocked ? a.icon : '🔒'),
           el('div', { className: 'meta' },
             el('div', { className: 'name' }, a.name),
             el('div', { className: 'desc' }, a.desc)
-          )
+          ),
+          el('div', { className: 'ach-mark' }, unlocked ? '✓' : '')
         ));
       }
       showModal(content);
     }
 
-    function openSettingsMenuReal(state) {
+    function openSettingsMenu(state) {
       const content = el('div');
       content.appendChild(modalHeader('Настройки'));
+      content.appendChild(el('p', { className: 'settings-hint' },
+        'Прогресс хранится только в этом браузере. Сохрани копию, чтобы не потерять его при чистке истории браузера или переезде на другой компьютер.'));
       content.appendChild(el('button', {
-        className: 'btn',
-        style: { width: '100%', marginTop: '16px' },
-        onclick: () => confirmReset(state)
+        className: 'btn settings-btn', onclick: () => exportProgress(state)
+      }, '💾 Сохранить прогресс в файл'));
+      content.appendChild(el('button', {
+        className: 'btn settings-btn', onclick: importProgress
+      }, '📂 Загрузить прогресс из файла'));
+      content.appendChild(el('button', {
+        className: 'btn settings-btn settings-danger', onclick: () => confirmReset(state)
       }, '🗑 Сбросить весь прогресс'));
+      showModal(content);
+    }
+
+    function exportProgress(state) {
+      const stamp = Engine.dateStringFromMs(Engine.now(state));
+      const blob = new Blob([Storage._serialize(state)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = el('a', { href: url, download: 'math-dino-' + stamp + '.json' });
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function importProgress() {
+      const picker = el('input', { type: 'file', accept: 'application/json,.json', style: { display: 'none' } });
+      picker.addEventListener('change', () => {
+        const file = picker.files && picker.files[0];
+        picker.remove();
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onerror = () => showMessageModal('Не получилось', 'Файл не удалось прочитать.');
+        reader.onload = () => {
+          const parsed = Storage._deserialize(String(reader.result));
+          const migrated = parsed && Storage._migrate(parsed);
+          if (!migrated) {
+            showMessageModal('Не получилось', 'Этот файл не похож на сохранение игры.');
+            return;
+          }
+          confirmImport(migrated);
+        };
+        reader.readAsText(file);
+      });
+      document.body.appendChild(picker);
+      picker.click();
+    }
+
+    function confirmImport(incoming) {
+      const dinos = incoming.collection.dinosOwned.length;
+      const achs = incoming.achievements.unlocked.length;
+      const content = el('div');
+      content.appendChild(modalHeader('Загрузить этот прогресс?'));
+      content.appendChild(el('p', null,
+        'В файле: Lv.' + Engine.levelForXP(incoming.player.xp) + ', ' +
+        dinos + ' ' + plural(dinos, 'динозавр', 'динозавра', 'динозавров') + ', ' +
+        achs + ' ' + plural(achs, 'ачивка', 'ачивки', 'ачивок') + '.'
+      ));
+      content.appendChild(el('p', { style: { fontWeight: 'bold' } }, 'Текущий прогресс будет заменён.'));
+      const actions = el('div', { className: 'modal-actions' },
+        el('button', { className: 'btn', onclick: hideModal }, 'Отмена'),
+        el('button', {
+          className: 'btn btn-danger',
+          onclick: () => { Storage.save(incoming); location.reload(); }
+        }, 'Загрузить')
+      );
+      content.appendChild(actions);
+      showModal(content);
+    }
+
+    function showMessageModal(title, text) {
+      const content = el('div');
+      content.appendChild(modalHeader(title));
+      content.appendChild(el('p', null, text));
+      content.appendChild(el('div', { className: 'modal-actions' },
+        el('button', { className: 'btn', onclick: hideModal }, 'Понятно')
+      ));
       showModal(content);
     }
 
     function confirmReset(state) {
       const content = el('div');
       content.appendChild(modalHeader('Точно стереть весь прогресс?'));
+      const dinos = state.collection.dinosOwned.length;
+      const achs = state.achievements.unlocked.length;
       content.appendChild(el('p', null,
         'Будет потеряно: Lv.' + state.player.level + ', ' +
-        state.collection.dinosOwned.length + ' динозавр(а), ' +
-        state.achievements.unlocked.length + ' ачивок.'
+        dinos + ' ' + plural(dinos, 'динозавр', 'динозавра', 'динозавров') + ', ' +
+        achs + ' ' + plural(achs, 'ачивка', 'ачивки', 'ачивок') + '.'
       ));
-      content.appendChild(el('p', { style: { fontWeight: 'bold' } }, 'Это нельзя отменить.'));
-      const actions = el('div', { style: { display: 'flex', gap: '12px', marginTop: '16px' } });
-      actions.appendChild(el('button', { className: 'btn', style: { flex: '1' }, onclick: hideModal }, 'Отмена'));
+      content.appendChild(el('p', { style: { fontWeight: 'bold' } }, 'Это нельзя отменить. Сначала можно сохранить копию в файл.'));
+      const actions = el('div', { className: 'modal-actions' });
+      actions.appendChild(el('button', { className: 'btn', onclick: hideModal }, 'Отмена'));
       actions.appendChild(el('button', {
-        className: 'btn',
-        style: { flex: '1', background: '#ef4444', color: 'white' },
+        className: 'btn btn-danger',
         onclick: () => { Storage.reset(); location.reload(); }
       }, 'Да, стереть'));
       content.appendChild(actions);
@@ -1902,12 +2329,21 @@
       };
       refresh();
 
+      // Проверяем оба размера: маленькие превью и полные картинки.
       results.forEach(r => {
         if (!r.dino.image) { r.status = 'fail'; refresh(); return; }
-        const probe = new Image();
-        probe.onload = () => { r.status = 'ok'; refresh(); };
-        probe.onerror = () => { r.status = 'fail'; refresh(); };
-        probe.src = 'images/' + r.dino.image;
+        let done = 0, failed = false;
+        const paths = [dinoImagePath(r.dino, 'dino-sm'), dinoImagePath(r.dino, 'dino-xl')];
+        paths.forEach(path => {
+          const probe = new Image();
+          const finish = (ok) => {
+            if (!ok) failed = true;
+            if (++done === paths.length) { r.status = failed ? 'fail' : 'ok'; refresh(); }
+          };
+          probe.onload = () => finish(true);
+          probe.onerror = () => finish(false);
+          probe.src = path;
+        });
       });
     }
 
@@ -1915,21 +2351,23 @@
       const panel = el('div', { className: 'dev-panel' });
       panel.appendChild(el('div', { style: { fontWeight: 'bold', marginBottom: '6px' } }, '⚙ DEV PANEL — не для дочки'));
 
-      const btn = (label, fn) => {
-        const b = el('button', { onclick: () => { fn(); Storage.save(state); renderHub(state); renderDevPanelInto(); } }, label);
-        return b;
-      };
+      const row = el('div', { className: 'dev-buttons' });
+      const btn = (label, fn) => el('button', {
+        className: 'dev-btn',
+        onclick: () => { fn(); Storage.save(state); renderHub(state); renderDevPanelInto(); }
+      }, label);
 
-      panel.appendChild(btn('Reset all', () => { Storage.reset(); location.reload(); }));
-      panel.appendChild(btn('Set: новичок', () => devSetNovice(state)));
-      panel.appendChild(btn('Set: продвинутый', () => devSetAdvanced(state)));
-      panel.appendChild(btn('+10 правильных', () => devAddCorrects(state, 10)));
-      panel.appendChild(btn('Вылупить яйцо', () => devForceHatch(state)));
-      panel.appendChild(btn('+1 день (offset: ' + Math.round(state.settings.timeOffset / (24 * 3600 * 1000)) + 'д)', () => { state.settings.timeOffset += 24 * 3600 * 1000; }));
-      panel.appendChild(btn('Тир: средний', () => { state.player.currentTier = 1; }));
-      panel.appendChild(btn('Тир: сложный', () => { state.player.currentTier = 2; }));
-      panel.appendChild(btn('Дать ачивку streak-fast-10', () => { if (!state.achievements.unlocked.includes('streak-fast-10')) state.achievements.unlocked.push('streak-fast-10'); }));
-      panel.appendChild(el('button', { onclick: () => devCheckImages() }, '📦 Проверить картинки'));
+      row.appendChild(btn('Reset all', () => { Storage.reset(); location.reload(); }));
+      row.appendChild(btn('Set: новичок', () => devSetNovice(state)));
+      row.appendChild(btn('Set: продвинутый', () => devSetAdvanced(state)));
+      row.appendChild(btn('+10 правильных', () => devAddCorrects(state, 10)));
+      row.appendChild(btn('Вылупить яйцо', () => devForceHatch(state)));
+      row.appendChild(btn('+1 день (offset: ' + Math.round(state.settings.timeOffset / (24 * 3600 * 1000)) + 'д)', () => { state.settings.timeOffset += 24 * 3600 * 1000; }));
+      row.appendChild(btn('Тир: средний', () => { state.player.currentTier = 1; }));
+      row.appendChild(btn('Тир: сложный', () => { state.player.currentTier = 2; }));
+      row.appendChild(btn('Дать ачивку streak-fast-10', () => { if (!state.achievements.unlocked.includes('streak-fast-10')) state.achievements.unlocked.push('streak-fast-10'); }));
+      row.appendChild(el('button', { className: 'dev-btn', onclick: () => devCheckImages() }, '📦 Проверить картинки'));
+      panel.appendChild(row);
 
       return panel;
     }
@@ -1976,7 +2414,7 @@
     }
 
     function devForceHatch(state) {
-      state.collection.activeEgg.crackProgress = 49;
+      state.collection.activeEgg.crackProgress = EGG_CRACKS_TO_HATCH - 1;
       const events = Engine.crackEgg(state);
       runEventAnimations(events, () => {});
     }
