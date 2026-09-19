@@ -772,7 +772,10 @@
           if (egg && egg.crackProgress > EGG_CRACKS_TO_HATCH - 1) {
             egg.crackProgress = EGG_CRACKS_TO_HATCH - 1;
           }
-        } else if (from !== STATE_VERSION && from !== 2) {
+        // Предупреждаем только о версиях, которых не знаем: из будущего или
+        // испорченных. Известные (от 1 до текущей) мигрируются молча, и это
+        // условие не надо обновлять при подъёме STATE_VERSION.
+        } else if (!(from >= 1 && from <= STATE_VERSION)) {
           Storage.loadWarning = t('storage.otherVersion');
         }
         // Сохранения 1–2 версии играли по-русски; менять язык под уже
@@ -867,7 +870,7 @@
         assertEq(result.player.xp, 777);
       });
 
-      it('v1 → v2 keeps all progress', () => {
+      it('v1 → текущая версия: прогресс не теряется', () => {
         const s = createInitialState();
         s.version = 1;
         s.player.xp = 1234;
@@ -1972,10 +1975,18 @@
       });
 
       it('сохранение второй версии получает русский, а не автоопределение', () => {
-        const s = createInitialState();
-        s.version = 2;
-        delete s.settings.lang;
-        assertEq(Storage._migrate(s).settings.lang, 'ru');
+        // Без подмены тест бессмыслен: в раннере navigator.language = 'ru-RU',
+        // и автоопределение вернуло бы тот же 'ru', что и защита.
+        const was = navigator.language;
+        navigator.language = 'ko-KR';
+        try {
+          const s = createInitialState();
+          s.version = 2;
+          delete s.settings.lang;
+          assertEq(Storage._migrate(s).settings.lang, 'ru');
+        } finally {
+          navigator.language = was;
+        }
       });
 
       it('уже записанный язык миграция не трогает', () => {
