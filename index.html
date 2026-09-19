@@ -398,7 +398,46 @@
       'data.ach.tier-up-medium.name': 'Открыт средний уровень',
       'data.ach.tier-up-medium.desc': 'Перейти на средний тир',
       'data.ach.all-100.name': 'Магистр',
-      'data.ach.all-100.desc': 'Выучить все 100 примеров'
+      'data.ach.all-100.desc': 'Выучить все 100 примеров',
+
+      'common.ok': 'ОК',
+      'common.cancel': 'Отмена',
+      'common.save': 'Сохранить',
+      'common.home': '← Домой',
+
+      'gate.title': 'Привет! Как тебя зовут?',
+      'gate.subtitle': 'Так игра будет здороваться с тобой.',
+      'gate.placeholder': 'Твоё имя',
+      'gate.go': 'Поехали!',
+      'gate.empty': 'Напиши, как тебя зовут',
+      'gate.editTitle': 'Имя игрока',
+      'gate.editEmpty': 'Имя не может быть пустым',
+
+      'hub.greeting': '{hello}, {name}! 🦕',
+      'hub.greetingNoName': '{hello}! 🦕',
+      'hub.tierUnlocked': '🎉 Открыт {tier} уровень! Новые примеры: {list}',
+      'hub.welcomeBack': {
+        one: '📅 С возвращением! Тебя ждёт {n} пример на повторение',
+        few: '📅 С возвращением! Тебя ждёт {n} примера на повторение',
+        many: '📅 С возвращением! Тебя ждёт {n} примеров на повторение'
+      },
+      'hub.xpMaxed': '{current} XP — максимум',
+      'hub.xpProgress': '{current} / {max} XP',
+      'hub.level': 'Lv.{level} {name}',
+      'hub.play': '🦖 ПОИГРАТЬ!',
+      'hub.allFresh': 'Всё выучено и свежо — примеры вернутся на повторение через несколько дней.',
+      'hub.activeEgg': 'Активное яйцо: {progress} / {max}',
+      'hub.allDinosOwned': 'Все динозавры собраны! Ты — легенда!',
+      'hub.collection': 'Моя коллекция ({owned}/{total})',
+      'hub.collectionAll': 'все →',
+      'hub.achievements': '🏆 Ачивки ({owned}/{total}) →',
+      'hub.progress': '📊 Прогресс →',
+      'hub.nothingTitleAll': '🏆 Ты знаешь всю таблицу!',
+      'hub.nothingTitleTier': '🎉 Всё на этом уровне выучено!',
+      'hub.nothingBody': 'Все примеры свежие, повторять пока нечего. Они вернутся через несколько дней — заходи проверить, что всё помнишь.',
+
+      'storage.unreadable': 'Сохранение не удалось прочитать, игра начата заново.',
+      'storage.otherVersion': 'Сохранение от другой версии игры. Прогресс сохранён, но что-то может выглядеть непривычно.'
     };
 
     let _lang = 'ru';
@@ -629,11 +668,11 @@
           if (parsed === null) return createInitialState();
           const migrated = Storage._migrate(parsed);
           if (migrated) return migrated;
-          Storage.loadWarning = 'Сохранение не удалось прочитать, игра начата заново.';
+          Storage.loadWarning = t('storage.unreadable');
           return createInitialState();
         } catch (err) {
           console.warn('Storage.load failed', err);
-          Storage.loadWarning = 'Сохранение не удалось прочитать, игра начата заново.';
+          Storage.loadWarning = t('storage.unreadable');
           return createInitialState();
         }
       },
@@ -666,7 +705,7 @@
             egg.crackProgress = EGG_CRACKS_TO_HATCH - 1;
           }
         } else if (from !== STATE_VERSION) {
-          Storage.loadWarning = 'Сохранение от другой версии игры. Прогресс сохранён, но что-то может выглядеть непривычно.';
+          Storage.loadWarning = t('storage.otherVersion');
         }
         return Storage._fillDefaults(state);
       },
@@ -1436,7 +1475,7 @@
         assert(g.includes('Тимур'), g);
         const greetings = [1, 2, 3, 4].map(i => I18N.ru['data.greeting.' + i]);
         assert(greetings.some(x => g.startsWith(x)), g);
-        assert(g.endsWith('!'), g);
+        assert(g.endsWith('! 🦕'), g);
       });
 
       it('без имени приветствие не остаётся с висящей запятой', () => {
@@ -1917,11 +1956,18 @@
         }
       });
 
-      it('приветствие подставляет имя и не оставляет висящей запятой', () => {
-        const s = createInitialState();
-        s.player.name = 'Тимур';
-        assert(greetingFor(s).includes('Тимур'), greetingFor(s));
-        assert(!greetingFor(createInitialState()).includes(','), 'запятая без имени');
+    });
+
+    describe('i18n: хаб', () => {
+      it('баннер возвращения склоняет «пример» по числу', () => {
+        assertEq(t('hub.welcomeBack', { n: 1 }), '📅 С возвращением! Тебя ждёт 1 пример на повторение');
+        assertEq(t('hub.welcomeBack', { n: 3 }), '📅 С возвращением! Тебя ждёт 3 примера на повторение');
+        assertEq(t('hub.welcomeBack', { n: 7 }), '📅 С возвращением! Тебя ждёт 7 примеров на повторение');
+      });
+
+      it('баннер открытого тира собирает список множителей', () => {
+        assertEq(t('hub.tierUnlocked', { tier: 'средний', list: '×3, ×4' }),
+          '🎉 Открыт средний уровень! Новые примеры: ×3, ×4');
       });
     });
 
@@ -1945,8 +1991,6 @@
       return e;
     }
 
-    function pickRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
-
     // Имя игрока спрашиваем один раз при первом запуске и храним в сохранении.
     function normalizeName(raw) {
       return String(raw == null ? '' : raw).replace(/\s+/g, ' ').trim().slice(0, NAME_MAX_LEN);
@@ -1955,7 +1999,7 @@
     function greetingFor(state) {
       const name = normalizeName(state.player.name);
       const hello = t('data.greeting.' + (1 + Math.floor(Math.random() * 4)));
-      return name ? hello + ', ' + name + '!' : hello + '!';
+      return name ? t('hub.greeting', { hello, name }) : t('hub.greetingNoName', { hello });
     }
 
     function plural(n, one, few, many) {
@@ -1977,7 +2021,7 @@
         el('span', null, text),
         el('button', {
           onclick: () => { box.remove(); if (onClose) onClose(); }
-        }, 'ОК')
+        }, t('common.ok'))
       );
       return box;
     }
@@ -2004,25 +2048,28 @@
 
       const input = el('input', {
         className: 'name-input', type: 'text', maxlength: String(NAME_MAX_LEN),
-        autocomplete: 'off', placeholder: 'Твоё имя'
+        autocomplete: 'off', placeholder: t('gate.placeholder')
       });
       const error = el('div', { className: 'name-error' });
       const submit = () => {
         const name = normalizeName(input.value);
-        if (!name) { error.textContent = 'Напиши, как тебя зовут'; input.focus(); return; }
+        if (!name) { error.textContent = t('gate.empty'); input.focus(); return; }
         state.player.name = name;
         Storage.save(state);
         onDone();
       };
-      input.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') submit(); });
+      input.addEventListener('keydown', (ev) => {
+        if (ev.isComposing) return;          // идёт набор хангыля через IME
+        if (ev.key === 'Enter') submit();
+      });
 
       app.appendChild(el('div', { className: 'name-gate' },
         el('div', { className: 'name-gate-dino' }, '🦕'),
-        el('h2', null, 'Привет! Как тебя зовут?'),
-        el('p', { className: 'name-gate-note' }, 'Так игра будет здороваться с тобой.'),
+        el('h2', null, t('gate.title')),
+        el('p', { className: 'name-gate-note' }, t('gate.subtitle')),
         input,
         error,
-        el('button', { className: 'btn btn-primary name-gate-btn', onclick: submit }, 'Поехали!')
+        el('button', { className: 'btn btn-primary name-gate-btn', onclick: submit }, t('gate.go'))
       ));
       input.focus();
     }
@@ -2035,21 +2082,24 @@
       const error = el('div', { className: 'name-error' });
       const save = () => {
         const name = normalizeName(input.value);
-        if (!name) { error.textContent = 'Имя не может быть пустым'; input.focus(); return; }
+        if (!name) { error.textContent = t('gate.editEmpty'); input.focus(); return; }
         state.player.name = name;
         Storage.save(state);
         hideModal();
         renderHub(state);
       };
-      input.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') save(); });
+      input.addEventListener('keydown', (ev) => {
+        if (ev.isComposing) return;          // идёт набор хангыля через IME
+        if (ev.key === 'Enter') save();
+      });
 
       const content = el('div');
-      content.appendChild(modalHeader('Имя игрока'));
+      content.appendChild(modalHeader(t('gate.editTitle')));
       content.appendChild(input);
       content.appendChild(error);
       content.appendChild(el('div', { className: 'modal-actions' },
-        el('button', { className: 'btn', onclick: hideModal }, 'Отмена'),
-        el('button', { className: 'btn btn-check', onclick: save }, 'Сохранить')
+        el('button', { className: 'btn', onclick: hideModal }, t('common.cancel')),
+        el('button', { className: 'btn btn-check', onclick: save }, t('common.save'))
       ));
       showModal(content);
       input.focus();
@@ -2060,9 +2110,8 @@
       app.innerHTML = '';
 
       // Header
-      const greeting = greetingFor(state) + ' 🦕';
       const header = el('div', { className: 'header' },
-        el('h1', null, greeting),
+        el('h1', null, greetingFor(state)),
         el('div', { className: 'header-actions' },
           el('button', { onclick: () => openSettingsMenu(state) }, '⚙')
         )
@@ -2078,22 +2127,26 @@
       if (_pendingTierBanner !== null) {
         const tier = _pendingTierBanner;
         _pendingTierBanner = null;
-        app.appendChild(banner('🎉 Открыт ' + tierNameInline(tier) + ' уровень! Новые примеры: ' + newMultipliersFor(tier).map(n => '×' + n).join(', ')));
+        app.appendChild(banner(t('hub.tierUnlocked', {
+          tier: tierNameInline(tier),
+          list: newMultipliersFor(tier).map(n => '×' + n).join(', ')
+        })));
       }
 
       // Баннер возвращения: только то, что реально надо повторить
       const repeatPool = Engine.repeatPool(state);
       if (state.player.dailyStreak >= 2 && repeatPool.length > 0) {
-        app.appendChild(banner('📅 С возвращением! Тебя ждёт ' + repeatPool.length + ' ' +
-          plural(repeatPool.length, 'пример', 'примера', 'примеров') + ' на повторение'));
+        app.appendChild(banner(t('hub.welcomeBack', { n: repeatPool.length })));
       }
 
       // XP bar
       const lvl = xpInLevel(state);
       const xpBar = el('div', { className: 'xp-bar' },
         el('div', { className: 'xp-bar-label' },
-          el('span', null, 'Lv.' + lvl.level + ' ' + levelName(lvl.level)),
-          el('span', null, lvl.maxed ? (lvl.current + ' XP — максимум') : (lvl.current + ' / ' + lvl.max + ' XP'))
+          el('span', null, t('hub.level', { level: lvl.level, name: levelName(lvl.level) })),
+          el('span', null, lvl.maxed
+            ? t('hub.xpMaxed', { current: lvl.current })
+            : t('hub.xpProgress', { current: lvl.current, max: lvl.max }))
         ),
         el('div', { className: 'xp-bar-track' },
           el('div', { className: 'xp-bar-fill', style: { width: (lvl.maxed ? 100 : 100 * lvl.current / lvl.max) + '%' } })
@@ -2105,12 +2158,11 @@
       const playBtn = el('button', {
         className: 'btn btn-primary',
         onclick: () => startRound(state)
-      }, '🦖 ПОИГРАТЬ!');
+      }, t('hub.play'));
       const nothingLeft = Engine.pickQuestion(state, null) === null;
       app.appendChild(el('div', { className: 'play-button-wrap' },
         playBtn,
-        nothingLeft ? el('div', { className: 'play-hint' },
-          'Всё выучено и свежо — примеры вернутся на повторение через несколько дней.') : null
+        nothingLeft ? el('div', { className: 'play-hint' }, t('hub.allFresh')) : null
       ));
 
       // Placeholder divs for sub-renders
@@ -2480,11 +2532,10 @@
       const app = document.getElementById('app');
       app.innerHTML = '';
       app.appendChild(el('div', { className: 'round-end' },
-        el('h2', null, isLastTier ? '🏆 Ты знаешь всю таблицу!' : '🎉 Ты выучила всё на этом уровне!'),
-        el('p', { className: 'round-end-note' },
-          'Все примеры свежие, повторять пока нечего. Они вернутся через несколько дней — заходи проверить, что всё помнишь.'),
+        el('h2', null, isLastTier ? t('hub.nothingTitleAll') : t('hub.nothingTitleTier')),
+        el('p', { className: 'round-end-note' }, t('hub.nothingBody')),
         el('div', { className: 'actions' },
-          el('button', { className: 'btn btn-secondary', onclick: returnToHub }, '← Домой')
+          el('button', { className: 'btn btn-secondary', onclick: returnToHub }, t('common.home'))
         )
       ));
     }
@@ -2495,7 +2546,7 @@
       if (state.collection.nextDinoIndex >= DINOS.length) {
         target.appendChild(el('div', { className: 'active-egg' },
           el('span', { className: 'egg-emoji' }, '👑'),
-          el('div', { style: { flex: '1' } }, 'Все динозавры собраны! Ты — легенда!')
+          el('div', { style: { flex: '1' } }, t('hub.allDinosOwned'))
         ));
         return;
       }
@@ -2503,7 +2554,7 @@
       target.appendChild(el('div', { className: 'active-egg' },
         el('span', { className: 'egg-emoji' }, '🥚'),
         el('div', { style: { flex: '1' } },
-          el('div', { style: { fontSize: '14px', marginBottom: '4px' } }, 'Активное яйцо: ' + progress + ' / ' + EGG_CRACKS_TO_HATCH),
+          el('div', { style: { fontSize: '14px', marginBottom: '4px' } }, t('hub.activeEgg', { progress, max: EGG_CRACKS_TO_HATCH })),
           el('div', { className: 'egg-progress-track' },
             el('div', { className: 'egg-progress-fill', style: { width: (100 * progress / EGG_CRACKS_TO_HATCH) + '%' } })
           )
@@ -2520,8 +2571,8 @@
       target.innerHTML = '';
       const section = el('div', { className: 'collection-section' });
       section.appendChild(el('div', { className: 'collection-header' },
-        el('h3', { style: { margin: '0' } }, 'Моя коллекция (' + state.collection.dinosOwned.length + '/' + DINOS.length + ')'),
-        el('button', { className: 'btn btn-secondary', onclick: () => openCollectionModal(state) }, 'все →')
+        el('h3', { style: { margin: '0' } }, t('hub.collection', { owned: state.collection.dinosOwned.length, total: DINOS.length })),
+        el('button', { className: 'btn btn-secondary', onclick: () => openCollectionModal(state) }, t('hub.collectionAll'))
       ));
       const grid = el('div', { className: 'collection-grid' });
       for (const dino of DINOS) {
@@ -2543,11 +2594,11 @@
       row.appendChild(el('button', {
         className: 'btn btn-secondary',
         onclick: () => openAchievementsModal(state)
-      }, '🏆 Ачивки (' + state.achievements.unlocked.length + '/' + ACHIEVEMENTS.length + ') →'));
+      }, t('hub.achievements', { owned: state.achievements.unlocked.length, total: ACHIEVEMENTS.length })));
       row.appendChild(el('button', {
         className: 'btn btn-secondary',
         onclick: () => openProgressModal(state)
-      }, '📊 Прогресс →'));
+      }, t('hub.progress')));
       target.appendChild(row);
     }
 
