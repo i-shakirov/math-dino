@@ -174,8 +174,19 @@
     .hatch-close { margin-top: 24px; font-size: 20px; padding: 16px 32px; }
     .play-hint { margin-top: 12px; color: #6b5642; font-size: 15px; }
 
+    /* Ввод имени */
+    .name-gate { background: rgba(255,255,255,0.75); border-radius: 16px; padding: 32px 24px; text-align: center; margin-top: 32px; }
+    .name-gate h2 { margin: 12px 0 8px; font-size: clamp(22px, 5.5vw, 30px); }
+    .name-gate-dino { font-size: clamp(56px, 16vw, 96px); line-height: 1; }
+    .name-gate-note { color: #6b5642; margin: 0 0 20px; }
+    .name-gate-btn { margin-top: 12px; }
+    .name-input { display: block; margin: 0 auto; font-family: inherit; font-size: clamp(20px, 5vw, 28px); text-align: center; width: min(320px, 100%); padding: 12px 16px; border: 4px solid #e7d8c4; border-radius: 14px; background: #fff; color: inherit; }
+    .name-input:focus { outline: none; border-color: #f59e0b; }
+    .name-error { color: #b91c1c; min-height: 22px; margin-top: 8px; text-align: center; }
+
     /* Настройки */
     .settings-hint { color: #6b5642; font-size: 14px; margin: 0 0 16px; }
+    .settings-hint-gap { margin-top: 20px; }
     .settings-btn { display: block; width: 100%; margin-top: 10px; text-align: left; }
     .settings-danger { color: #b91c1c; }
     .modal-actions { display: flex; gap: 12px; margin-top: 20px; }
@@ -214,7 +225,7 @@
     const STATE_VERSION = 2;
 
     const GREETINGS = ['Привет', 'С возвращением', 'Здарова', 'Здравствуй'];
-    const NAMES = ['Мария', 'Машуля', 'Мария Ивановна', 'Маша', 'Машенька'];
+    const NAME_MAX_LEN = 20;
 
     // Тиры: какие первые множители (A) разрешены на каждом тире.
     // Тиры кумулятивны: TIER_MULTIPLIERS[1] включает [0].
@@ -384,6 +395,7 @@
         version: STATE_VERSION,
         examples,
         player: {
+          name: '',
           xp: 0, level: 1,
           totalCorrectFast: 0, totalCorrectSlow: 0, totalWrong: 0,
           sessionsCount: 0,
@@ -1202,6 +1214,47 @@
       });
     });
 
+    describe('имя игрока', () => {
+      it('по умолчанию пустое', () => {
+        assertEq(createInitialState().player.name, '');
+      });
+
+      it('normalizeName режет пробелы и длину', () => {
+        assertEq(normalizeName('  Тимур  '), 'Тимур');
+        assertEq(normalizeName('Анна   Мария'), 'Анна Мария');
+        assertEq(normalizeName(null), '');
+        assertEq(normalizeName(undefined), '');
+        assertEq(normalizeName('я'.repeat(50)).length, NAME_MAX_LEN);
+      });
+
+      it('greetingFor подставляет имя после приветствия', () => {
+        const s = createInitialState();
+        s.player.name = 'Тимур';
+        const g = greetingFor(s);
+        assert(g.includes('Тимур'), g);
+        assert(GREETINGS.some(x => g.startsWith(x)), g);
+        assert(g.endsWith('!'), g);
+      });
+
+      it('без имени приветствие не остаётся с висящей запятой', () => {
+        const g = greetingFor(createInitialState());
+        assert(!g.includes(','), 'запятая без имени: ' + g);
+      });
+
+      it('сохранение без поля name получает пустое имя, а не undefined', () => {
+        const s = createInitialState();
+        delete s.player.name;
+        assertEq(Storage._migrate(s).player.name, '');
+      });
+
+      it('миграция не теряет уже введённое имя', () => {
+        const s = createInitialState();
+        s.version = 1;
+        s.player.name = 'Мария';
+        assertEq(Storage._migrate(s).player.name, 'Мария');
+      });
+    });
+
     describe('plural', () => {
       const p = (n) => plural(n, 'пример', 'примера', 'примеров');
       it('picks the right Russian form', () => {
@@ -1526,6 +1579,16 @@
 
     function pickRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
+    // Имя игрока спрашиваем один раз при первом запуске и храним в сохранении.
+    function normalizeName(raw) {
+      return String(raw == null ? '' : raw).replace(/\s+/g, ' ').trim().slice(0, NAME_MAX_LEN);
+    }
+
+    function greetingFor(state) {
+      const name = normalizeName(state.player.name);
+      return name ? pickRandom(GREETINGS) + ', ' + name + '!' : pickRandom(GREETINGS) + '!';
+    }
+
     function plural(n, one, few, many) {
       const mod100 = n % 100, mod10 = n % 10;
       if (mod100 >= 11 && mod100 <= 14) return many;
@@ -1565,12 +1628,70 @@
       return LEVEL_THRESHOLDS[level - 1].name;
     }
 
+    // Первый запуск: спрашиваем имя, пока его нет — на хаб не пускаем.
+    function renderNameGate(state, onDone) {
+      const app = document.getElementById('app');
+      app.innerHTML = '';
+
+      const input = el('input', {
+        className: 'name-input', type: 'text', maxlength: String(NAME_MAX_LEN),
+        autocomplete: 'off', placeholder: 'Твоё имя'
+      });
+      const error = el('div', { className: 'name-error' });
+      const submit = () => {
+        const name = normalizeName(input.value);
+        if (!name) { error.textContent = 'Напиши, как тебя зовут'; input.focus(); return; }
+        state.player.name = name;
+        Storage.save(state);
+        onDone();
+      };
+      input.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') submit(); });
+
+      app.appendChild(el('div', { className: 'name-gate' },
+        el('div', { className: 'name-gate-dino' }, '🦕'),
+        el('h2', null, 'Привет! Как тебя зовут?'),
+        el('p', { className: 'name-gate-note' }, 'Так игра будет здороваться с тобой.'),
+        input,
+        error,
+        el('button', { className: 'btn btn-primary name-gate-btn', onclick: submit }, 'Поехали!')
+      ));
+      input.focus();
+    }
+
+    function openNameEditor(state) {
+      const input = el('input', {
+        className: 'name-input', type: 'text', maxlength: String(NAME_MAX_LEN), autocomplete: 'off'
+      });
+      input.value = state.player.name || '';
+      const error = el('div', { className: 'name-error' });
+      const save = () => {
+        const name = normalizeName(input.value);
+        if (!name) { error.textContent = 'Имя не может быть пустым'; input.focus(); return; }
+        state.player.name = name;
+        Storage.save(state);
+        hideModal();
+        renderHub(state);
+      };
+      input.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') save(); });
+
+      const content = el('div');
+      content.appendChild(modalHeader('Имя игрока'));
+      content.appendChild(input);
+      content.appendChild(error);
+      content.appendChild(el('div', { className: 'modal-actions' },
+        el('button', { className: 'btn', onclick: hideModal }, 'Отмена'),
+        el('button', { className: 'btn btn-check', onclick: save }, 'Сохранить')
+      ));
+      showModal(content);
+      input.focus();
+    }
+
     function renderHub(state) {
       const app = document.getElementById('app');
       app.innerHTML = '';
 
       // Header
-      const greeting = pickRandom(GREETINGS) + ', ' + pickRandom(NAMES) + '! 🦕';
+      const greeting = greetingFor(state) + ' 🦕';
       const header = el('div', { className: 'header' },
         el('h1', null, greeting),
         el('div', { className: 'header-actions' },
@@ -2198,7 +2319,10 @@
     function openSettingsMenu(state) {
       const content = el('div');
       content.appendChild(modalHeader('Настройки'));
-      content.appendChild(el('p', { className: 'settings-hint' },
+      content.appendChild(el('button', {
+        className: 'btn settings-btn', onclick: () => openNameEditor(state)
+      }, '✏️ Изменить имя'));
+      content.appendChild(el('p', { className: 'settings-hint settings-hint-gap' },
         'Прогресс хранится только в этом браузере. Сохрани копию, чтобы не потерять его при чистке истории браузера или переезде на другой компьютер.'));
       content.appendChild(el('button', {
         className: 'btn settings-btn', onclick: () => exportProgress(state)
@@ -2349,7 +2473,7 @@
 
     function renderDevPanel(state) {
       const panel = el('div', { className: 'dev-panel' });
-      panel.appendChild(el('div', { style: { fontWeight: 'bold', marginBottom: '6px' } }, '⚙ DEV PANEL — не для дочки'));
+      panel.appendChild(el('div', { style: { fontWeight: 'bold', marginBottom: '6px' } }, '⚙ DEV PANEL — не для игрока'));
 
       const row = el('div', { className: 'dev-buttons' });
       const btn = (label, fn) => el('button', {
@@ -2381,13 +2505,15 @@
     }
 
     function devSetNovice(state) {
-      const fresh = createInitialState();
-      Object.assign(state, fresh);
+      const name = state.player.name;
+      Object.assign(state, createInitialState());
+      state.player.name = name;
     }
 
     function devSetAdvanced(state) {
-      const fresh = createInitialState();
-      Object.assign(state, fresh);
+      const name = state.player.name;
+      Object.assign(state, createInitialState());
+      state.player.name = name;
       const pool = Engine.poolForTier(0);
       for (let i = 0; i < 36; i++) {
         const ex = state.examples[pool[i]];
@@ -2440,11 +2566,9 @@
       const today = Engine.dateStringFromMs(Engine.now(window.State));
       Engine.handleDailyStreak(window.State, today);
       Storage.save(window.State);
-      renderHub(window.State);
-      if (isDevMode()) {
-        exposeDevGlobals(window.State);
-        renderDevPanelInto();
-      }
+      if (isDevMode()) exposeDevGlobals(window.State);
+      if (normalizeName(window.State.player.name)) renderHub(window.State);
+      else renderNameGate(window.State, () => renderHub(window.State));
     });
   </script>
 </body>
