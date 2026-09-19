@@ -16,7 +16,9 @@ globalThis.document = {
   createElement(){ return { style:{}, classList:{ add(){}, remove(){} },
     appendChild(){}, addEventListener(){}, setAttribute(){}, remove(){},
     replaceWith(){}, focus(){} }; },
-  createTextNode(){ return {}; }, body:{ appendChild(){} }
+  createTextNode(){ return {}; }, body:{ appendChild(){} },
+  documentElement: { setAttribute(){}, getAttribute(){ return null; } },
+  title: ''
 };
 globalThis.location = { search: '?test=1', reload(){} };
 globalThis.localStorage = {
