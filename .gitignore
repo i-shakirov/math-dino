@@ -1,0 +1,15 @@
+# Архивы и оригиналы картинок — большие бинарники, в истории не нужны
+*.rar
+*.zip
+bak/images-original/
+
+# Экспортированные сохранения прогресса
+math-dino-*.json
+
+# Мусор ОС и редакторов
+Thumbs.db
+desktop.ini
+.DS_Store
+*.swp
+.vscode/
+.idea/

@@ -1,0 +1,2013 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Тренажёр динозавров</title>
+  <style>
+    /* === SECTION: CSS === */
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Comic Sans MS', 'Comic Neue', system-ui, sans-serif;
+      background: linear-gradient(135deg, #fef3c7 0%, #fed7aa 100%);
+      color: #2d1810;
+      min-height: 100vh;
+    }
+    #app { max-width: 900px; margin: 0 auto; padding: 20px; }
+
+    /* Header */
+    .header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: rgba(255,255,255,0.7); border-radius: 12px; margin-bottom: 16px; }
+    .header h1 { margin: 0; font-size: 22px; }
+    .header-actions button { font-size: 24px; background: none; border: none; cursor: pointer; padding: 4px 8px; }
+
+    /* XP bar */
+    .xp-bar { background: rgba(255,255,255,0.7); padding: 10px 16px; border-radius: 12px; margin-bottom: 16px; }
+    .xp-bar-label { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 4px; }
+    .xp-bar-track { height: 16px; background: #e7d8c4; border-radius: 8px; overflow: hidden; }
+    .xp-bar-fill { height: 100%; background: linear-gradient(90deg, #fbbf24, #f59e0b); transition: width 0.4s ease-out; }
+
+    /* Buttons */
+    .btn { font-family: inherit; font-size: 16px; padding: 12px 24px; border: none; border-radius: 12px; cursor: pointer; background: #fff; color: #2d1810; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+    .btn:hover { transform: translateY(-1px); }
+    .btn-primary { background: linear-gradient(135deg, #f97316, #ea580c); color: white; font-size: 28px; padding: 24px 48px; border-radius: 24px; font-weight: bold; animation: pulse 2s ease-in-out infinite; }
+    .btn-secondary { background: #fff7ed; }
+    @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
+
+    .play-button-wrap { text-align: center; margin: 24px 0; }
+
+    /* Active egg */
+    .active-egg { background: rgba(255,255,255,0.7); padding: 12px 16px; border-radius: 12px; margin: 16px 0; display: flex; align-items: center; gap: 12px; }
+    .egg-emoji { font-size: 36px; animation: wobble 3s ease-in-out infinite; transform-origin: bottom center; }
+    @keyframes wobble { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
+    .egg-progress-track { flex: 1; height: 14px; background: #e7d8c4; border-radius: 7px; overflow: hidden; }
+    .egg-progress-fill { height: 100%; background: linear-gradient(90deg, #f87171, #ef4444); transition: width 0.4s ease-out; }
+
+    /* Collection grid */
+    .collection-section { background: rgba(255,255,255,0.7); padding: 16px; border-radius: 12px; margin: 16px 0; }
+    .collection-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .collection-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+    .collection-cell { aspect-ratio: 1; background: #e7d8c4; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 32px; cursor: pointer; }
+    .collection-cell.owned { background: linear-gradient(135deg, #fef3c7, #fde68a); }
+    .collection-cell.locked { color: #a39581; }
+
+    /* Dino visuals — shared (img + emoji fallback) */
+    .dino-img,
+    .dino-emoji {
+      display: block;
+      margin: 0 auto;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+    .dino-sm { width: 96px;  height: 96px;  object-fit: cover;   border-radius: 12px; }
+    .dino-md { width: 180px; height: 180px; object-fit: contain; border-radius: 16px; }
+    .dino-lg { width: 240px; height: 240px; object-fit: contain; border-radius: 20px; }
+    .dino-xl { width: min(480px, 70vmin); height: min(480px, 70vmin); object-fit: contain; border-radius: 24px; }
+    .dino-emoji.dino-sm { font-size: 72px;  line-height: 96px;  }
+    .dino-emoji.dino-md { font-size: 120px; line-height: 180px; }
+    .dino-emoji.dino-lg { font-size: 160px; line-height: 240px; }
+    .dino-emoji.dino-xl { font-size: min(320px, 50vmin); line-height: min(480px, 70vmin); }
+
+    /* Footer buttons row */
+    .footer-row { display: flex; gap: 12px; }
+    .footer-row .btn { flex: 1; }
+
+    /* Trainer */
+    .trainer-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: rgba(255,255,255,0.7); border-radius: 12px; margin-bottom: 32px; }
+    .trainer-question { text-align: center; padding: 32px; background: rgba(255,255,255,0.7); border-radius: 16px; }
+    .trainer-question .q { font-size: 96px; font-weight: bold; margin: 16px 0; color: #2d1810; transition: color 0.2s; }
+    .trainer-question input { font-size: 64px; text-align: center; width: 200px; padding: 16px; border: 4px solid #e7d8c4; border-radius: 16px; font-family: inherit; }
+    .trainer-question input:focus { outline: none; border-color: #f59e0b; }
+    .trainer-question input.correct { border-color: #10b981; background: #d1fae5; animation: bounce 0.3s; }
+    .trainer-question input.correct-slow { border-color: #f59e0b; background: #fef3c7; }
+    .trainer-question input.wrong { border-color: #ef4444; background: #fee2e2; animation: shake 0.4s; }
+    @keyframes bounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+    @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+    .timer { font-size: 18px; color: #6b5642; margin-top: 16px; }
+    .feedback-text { font-size: 24px; margin-top: 16px; min-height: 32px; }
+    .correct-answer { font-size: 56px; font-weight: bold; color: #ef4444; margin: 16px 0; }
+    .round-progress { text-align: center; padding: 12px; color: #6b5642; }
+
+    /* Modal */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100; }
+    .modal { background: #fef9ef; border-radius: 16px; padding: 24px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .modal-header h2 { margin: 0; }
+    .modal-close { font-size: 24px; background: none; border: none; cursor: pointer; }
+
+    /* Toast */
+    .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #fbbf24, #f59e0b); color: white; padding: 16px 24px; border-radius: 12px; z-index: 200; box-shadow: 0 4px 12px rgba(0,0,0,0.2); animation: slideDown 0.5s; cursor: pointer; }
+    @keyframes slideDown { from { transform: translate(-50%, -100%); } to { transform: translateX(-50%); } }
+
+    /* Confetti */
+    .confetti { position: fixed; top: -20px; width: 8px; height: 8px; pointer-events: none; z-index: 150; }
+    @keyframes confetti-fall { to { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
+
+    /* Hatch animation overlay */
+    .hatch-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 250; }
+    .hatch-egg { font-size: 120px; }
+    .hatch-egg.cracking { animation: shake 0.3s 3; }
+    .hatch-dino { font-size: 160px; opacity: 0; animation: zoom-in 1.5s 0.5s forwards; }
+    @keyframes zoom-in { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .hatch-text { color: white; font-size: 32px; margin-top: 24px; opacity: 0; animation: fadeIn 1s 1s forwards; }
+    @keyframes fadeIn { to { opacity: 1; } }
+
+    /* Level up overlay */
+    .levelup-overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 240; pointer-events: none; }
+    .levelup-text { font-size: 64px; font-weight: bold; color: #f59e0b; text-shadow: 0 4px 8px rgba(0,0,0,0.3); animation: zoom-in 0.6s; }
+
+    /* Banner */
+    .banner { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: white; padding: 12px 16px; border-radius: 12px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+    .banner button { background: none; border: 1px solid white; color: white; padding: 4px 12px; border-radius: 6px; cursor: pointer; }
+
+    /* Progress bars in modals */
+    .table-row { display: flex; align-items: center; gap: 12px; padding: 6px 0; }
+    .table-row .label { width: 50px; font-weight: bold; }
+    .table-row .bar { flex: 1; height: 12px; background: #e7d8c4; border-radius: 6px; overflow: hidden; }
+    .table-row .bar-fill { height: 100%; background: linear-gradient(90deg, #10b981, #059669); }
+    .table-row .count { width: 50px; text-align: right; font-size: 14px; color: #6b5642; }
+    .table-row.locked { opacity: 0.5; }
+
+    /* Dev panel */
+    .dev-panel { position: fixed; bottom: 0; left: 0; right: 0; background: #1e1b18; color: #fff; padding: 12px 16px; z-index: 300; font-family: monospace; font-size: 13px; }
+    .dev-panel h3 { margin: 0 0 8px 0; color: #fbbf24; }
+    .dev-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+    .dev-btn { background: #374151; color: #fff; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+    .dev-btn:hover { background: #4b5563; }
+  </style>
+</head>
+<body>
+  <div id="app">Загрузка...</div>
+  <script>
+    'use strict';
+
+    // === SECTION: CONSTANTS ===
+    const STATE_KEY = 'math-dino-state-v1';
+    const STATE_VERSION = 1;
+
+    const GREETINGS = ['Привет', 'С возвращением', 'Здарова', 'Здравствуй'];
+    const NAMES = ['Мария', 'Машуля', 'Мария Ивановна', 'Маша', 'Машенька'];
+
+    // Тиры: какие первые множители (A) разрешены на каждом тире.
+    // Тиры кумулятивны: TIER_MULTIPLIERS[1] включает [0].
+    const TIER_MULTIPLIERS = [
+      [1, 2, 5, 10],                  // 0 — Лёгкий
+      [1, 2, 3, 4, 5, 10],            // 1 — Средний
+      [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] // 2 — Сложный
+    ];
+    const TIER_NAMES = ['Лёгкий', 'Средний', 'Сложный'];
+
+    const LEVEL_THRESHOLDS = [
+      { level: 1, name: 'Стажёр',                xpToNext: 100 },
+      { level: 2, name: 'Юный палеонтолог',      xpToNext: 250 },
+      { level: 3, name: 'Опытный палеонтолог',   xpToNext: 500 },
+      { level: 4, name: 'Доктор наук',           xpToNext: 900 },
+      { level: 5, name: 'Хранитель парка',       xpToNext: 1500 },
+      { level: 6, name: 'Профессор',             xpToNext: 2500 },
+      { level: 7, name: 'Легенда',               xpToNext: Infinity }
+    ];
+
+    const FAST_THRESHOLD_MS = 5000;
+    const FRESHNESS_DAYS = 3;
+    const FRESHNESS_MS = FRESHNESS_DAYS * 24 * 3600 * 1000;
+    const STREAK_TO_LEARN = 3;
+    const EGG_CRACKS_TO_HATCH = 50;
+    const TIER_UNLOCK_PCT = 0.8;
+    const ROUND_SIZE = 10;
+    const ROUND_BONUS_XP = 50;
+    const LEARNED_BONUS_XP = 30;
+    const TABLE_BONUS_XP = 200;
+    const FAST_XP = 10;
+    const SLOW_XP = 5;
+
+    const FEEDBACK_MS_FAST = 1200;
+    const FEEDBACK_MS_SLOW = 1500;
+    const FEEDBACK_MS_WRONG = 10000;
+    const INPUT_TIMEOUT_MS = 20000;
+
+    const DINOS = [
+      { id: 'velociraptor',   image: 'velociraptor.png',   emoji: '🦖', name: 'Велоцираптор',     fact: 'Самый быстрый — как ты, когда отвечаешь!' },
+      { id: 'stegosaurus',    image: 'stegosaurus.png',    emoji: '🦕', name: 'Стегозавр',         fact: 'С пластинами на спине' },
+      { id: 'triceratops',    image: 'triceratops.png',    emoji: '🦴', name: 'Трицератопс',       fact: 'Три рога на голове' },
+      { id: 'plesiosaurus',   image: 'plesiosaurus.png',   emoji: '🐊', name: 'Плезиозавр',        fact: 'Морской охотник с длинной шеей' },
+      { id: 'pterodactyl',    image: 'pterodactyl.png',    emoji: '🦅', name: 'Птеродактиль',      fact: 'Летал в небе, как птица' },
+      { id: 'brontosaurus',   image: 'brontosaurus.png',   emoji: '🦕', name: 'Бронтозавр',        fact: 'Длинная шея, ел листья с верхушек' },
+      { id: 'ankylosaurus',   image: 'ankylosaurus.png',   emoji: '🐢', name: 'Анкилозавр',        fact: 'С хвостом-булавой' },
+      { id: 'dilophosaurus',  image: 'dilophosaurus.png',  emoji: '🦎', name: 'Дилофозавр',        fact: 'Двойной гребень на голове' },
+      { id: 'iguanodon',      image: 'iguanodon.png',      emoji: '🦖', name: 'Игуанодон',         fact: 'Большой палец-шип на руке' },
+      { id: 'allosaurus',     image: 'allosaurus.png',     emoji: '🦖', name: 'Аллозавр',          fact: 'Хищник юрского периода' },
+      { id: 'parasaurolophus',image: 'parasaurolophus.png',emoji: '🦕', name: 'Паразауролоф',      fact: 'С трубкой на голове, гудел в неё' },
+      { id: 'spinosaurus',    image: 'spinosaurus.png',    emoji: '🐊', name: 'Спинозавр',         fact: 'С парусом на спине, ловил рыбу' },
+      { id: 'diplodocus',     image: 'diplodocus.png',     emoji: '🦕', name: 'Диплодок',          fact: 'Длинный, как два автобуса' },
+      { id: 'carnotaurus',    image: 'carnotaurus.png',    emoji: '🦖', name: 'Карнотавр',         fact: 'С рогами как у быка' },
+      { id: 'gallimimus',     image: 'gallimimus.png',     emoji: '🦖', name: 'Галлимим',          fact: 'Бегал быстро, как страус' },
+      { id: 'maiasaura',      image: 'maiasaura.png',      emoji: '🦕', name: 'Майязавра',         fact: 'Заботливая мама динозавров' },
+      { id: 'pachycephalo',   image: 'pachycephalo.png',   emoji: '🦖', name: 'Пахицефалозавр',    fact: 'Толстолобый, бодался' },
+      { id: 'mosasaurus',     image: 'mosasaurus.png',     emoji: '🐊', name: 'Мозазавр',          fact: 'Гигантская морская ящерица' },
+      { id: 'brachiosaurus',  image: 'brachiosaurus.png',  emoji: '🦕', name: 'Брахиозавр',        fact: 'Самый высокий, доставал до 5-го этажа' },
+      { id: 'tyrannosaurus',  image: 'tyrannosaurus.png',  emoji: '🦖', name: 'Тираннозавр Рекс',  fact: 'Король динозавров — финальная награда!' }
+    ];
+
+    const ACHIEVEMENTS = [
+      { id: 'first-correct',    icon: '🥚', name: 'Первая трещина',        desc: 'Первый правильный ответ' },
+      { id: 'streak-fast-10',   icon: '⚡', name: 'Быстрее ветра',           desc: '10 быстрых правильных подряд' },
+      { id: 'streak-25',        icon: '🔥', name: 'Огненная серия',          desc: '25 правильных подряд' },
+      { id: 'first-dino',       icon: '🦴', name: 'Первая косточка',         desc: 'Первый вылупившийся динозавр' },
+      { id: 'total-50',         icon: '🦖', name: 'Палеонтолог-джуниор',     desc: '50 правильных всего' },
+      { id: 'total-200',        icon: '🦕', name: 'Любитель древности',      desc: '200 правильных всего' },
+      { id: 'table-master',     icon: '🏆', name: 'Знаток таблицы',          desc: 'Полностью выучить любую таблицу N×1..N×10' },
+      { id: 'learned-50',       icon: '📚', name: 'Эрудит',                  desc: 'Выучить 50 примеров' },
+      { id: 'daily-5',          icon: '🌅', name: 'Ранняя пташка',           desc: 'Зайти 5 дней подряд' },
+      { id: 'perfect-round',    icon: '🎯', name: 'Идеальный раунд',         desc: '10/10 в раунде, все быстрые' },
+      { id: 'tier-up-medium',   icon: '🎓', name: 'Открыт средний уровень',  desc: 'Перейти на средний тир' },
+      { id: 'all-100',          icon: '👑', name: 'Магистр',                 desc: 'Выучить все 100 примеров' }
+    ];
+
+    // === SECTION: TEST INFRA ===
+    // Простой test runner. Активируется ?test=1 в URL.
+    // Каждый describe — группа, it — тест. assert/assertEq бросают AssertionError.
+    const Tests = {
+      suites: [],
+      currentSuite: null
+    };
+
+    function describe(name, fn) {
+      const suite = { name, tests: [] };
+      Tests.suites.push(suite);
+      Tests.currentSuite = suite;
+      try { fn(); } finally { Tests.currentSuite = null; }
+    }
+
+    function it(name, fn) {
+      if (!Tests.currentSuite) throw new Error('it() outside describe()');
+      Tests.currentSuite.tests.push({ name, fn });
+    }
+
+    function assert(cond, msg) {
+      if (!cond) throw new Error('Assertion failed: ' + (msg || ''));
+    }
+
+    function assertEq(actual, expected, msg) {
+      const a = JSON.stringify(actual);
+      const e = JSON.stringify(expected);
+      if (a !== e) throw new Error('Expected ' + e + ' but got ' + a + (msg ? ' — ' + msg : ''));
+    }
+
+    function assertApprox(actual, expected, tolerance, msg) {
+      if (Math.abs(actual - expected) > tolerance) {
+        throw new Error('Expected ~' + expected + ' (±' + tolerance + ') but got ' + actual + (msg ? ' — ' + msg : ''));
+      }
+    }
+
+    function runTests() {
+      const root = document.getElementById('app');
+      root.innerHTML = '<h1>Test Results</h1>';
+      let passed = 0, failed = 0;
+      for (const suite of Tests.suites) {
+        const suiteEl = document.createElement('div');
+        suiteEl.style.margin = '12px 0';
+        suiteEl.innerHTML = '<h3 style="margin:8px 0">' + suite.name + '</h3>';
+        for (const t of suite.tests) {
+          const testEl = document.createElement('div');
+          testEl.style.padding = '4px 12px';
+          try {
+            t.fn();
+            testEl.style.color = 'green';
+            testEl.textContent = '✓ ' + t.name;
+            passed++;
+          } catch (err) {
+            testEl.style.color = 'red';
+            testEl.textContent = '✗ ' + t.name + ' — ' + err.message;
+            console.error(suite.name + ' › ' + t.name, err);
+            failed++;
+          }
+          suiteEl.appendChild(testEl);
+        }
+        root.appendChild(suiteEl);
+      }
+      const summary = document.createElement('h2');
+      summary.style.color = failed > 0 ? 'red' : 'green';
+      summary.textContent = passed + ' passed, ' + failed + ' failed';
+      root.insertBefore(summary, root.children[1]);
+    }
+
+    function isTestMode() {
+      return new URLSearchParams(location.search).get('test') === '1';
+    }
+
+    describe('test runner', () => {
+      it('runs basic assertions', () => {
+        assertEq(1 + 1, 2);
+        assert(true);
+      });
+    });
+
+    // === SECTION: STORAGE ===
+    function createInitialState() {
+      const examples = {};
+      for (let a = 1; a <= 10; a++) {
+        for (let b = 1; b <= 10; b++) {
+          examples[a + 'x' + b] = {
+            correctFast: 0, correctSlow: 0, wrong: 0,
+            streakFast: 0, learned: false, lastSeen: 0, learnedAt: null
+          };
+        }
+      }
+      return {
+        version: STATE_VERSION,
+        examples,
+        player: {
+          xp: 0, level: 1,
+          totalCorrectFast: 0, totalCorrectSlow: 0, totalWrong: 0,
+          sessionsCount: 0,
+          currentTier: 0,
+          dailyStreak: 0,
+          lastOpenedAt: null,
+          streakFast: 0,
+          streakAny: 0,
+          tablesMastered: []
+        },
+        collection: {
+          dinosOwned: [],
+          activeEgg: { crackProgress: 0 },
+          nextDinoIndex: 0
+        },
+        achievements: { unlocked: [] },
+        settings: { timeOffset: 0 }
+      };
+    }
+
+    const Storage = {
+      load() {
+        try {
+          const raw = localStorage.getItem(STATE_KEY);
+          const parsed = Storage._deserialize(raw);
+          if (parsed === null) return createInitialState();
+          const migrated = Storage._migrate(parsed);
+          return migrated || createInitialState();
+        } catch (err) {
+          console.warn('Storage.load failed', err);
+          return createInitialState();
+        }
+      },
+      save(state) {
+        try {
+          localStorage.setItem(STATE_KEY, Storage._serialize(state));
+        } catch (err) {
+          console.warn('Storage.save failed', err);
+        }
+      },
+      reset() {
+        try { localStorage.removeItem(STATE_KEY); } catch (err) { /* ignore */ }
+      },
+      _serialize(state) {
+        return JSON.stringify(state);
+      },
+      _deserialize(raw) {
+        if (!raw) return null;
+        try { return JSON.parse(raw); } catch (err) { return null; }
+      },
+      _migrate(state) {
+        if (state.version === STATE_VERSION) return state;
+        return null;
+      }
+    };
+
+    describe('createInitialState', () => {
+      it('initializes with version 1', () => {
+        const s = createInitialState();
+        assertEq(s.version, 1);
+      });
+
+      it('creates 100 example entries with zero stats', () => {
+        const s = createInitialState();
+        assertEq(Object.keys(s.examples).length, 100);
+        assertEq(s.examples['7x8'], {
+          correctFast: 0, correctSlow: 0, wrong: 0,
+          streakFast: 0, learned: false, lastSeen: 0, learnedAt: null
+        });
+      });
+
+      it('creates player with default xp 0 level 1 tier 0', () => {
+        const s = createInitialState();
+        assertEq(s.player.xp, 0);
+        assertEq(s.player.level, 1);
+        assertEq(s.player.currentTier, 0);
+        assertEq(s.player.streakFast, 0);
+        assertEq(s.player.streakAny, 0);
+        assertEq(s.player.tablesMastered, []);
+      });
+
+      it('creates empty collection with active egg at 0', () => {
+        const s = createInitialState();
+        assertEq(s.collection.dinosOwned, []);
+        assertEq(s.collection.activeEgg.crackProgress, 0);
+        assertEq(s.collection.nextDinoIndex, 0);
+      });
+
+      it('creates settings with timeOffset 0', () => {
+        const s = createInitialState();
+        assertEq(s.settings.timeOffset, 0);
+      });
+    });
+
+    describe('Storage.serialize/deserialize', () => {
+      it('round-trips through JSON', () => {
+        const s = createInitialState();
+        s.player.xp = 123;
+        const serialized = Storage._serialize(s);
+        const deserialized = Storage._deserialize(serialized);
+        assertEq(deserialized.player.xp, 123);
+      });
+
+      it('returns null for invalid JSON', () => {
+        assertEq(Storage._deserialize('not-json{'), null);
+      });
+
+      it('returns null for null input', () => {
+        assertEq(Storage._deserialize(null), null);
+      });
+    });
+
+    describe('Storage.migrate', () => {
+      it('returns state unchanged if version matches', () => {
+        const s = createInitialState();
+        const result = Storage._migrate(s);
+        assertEq(result.version, 1);
+        assertEq(result, s);
+      });
+
+      it('returns null for state with future unknown version', () => {
+        const s = createInitialState();
+        s.version = 999;
+        assertEq(Storage._migrate(s), null);
+      });
+    });
+
+    // === SECTION: ENGINE ===
+    const Engine = {};
+
+    Engine.now = function(state) {
+      return Date.now() + (state.settings.timeOffset || 0);
+    };
+
+    Engine.exampleKey = function(a, b) { return a + 'x' + b; };
+
+    Engine.parseKey = function(key) {
+      const parts = key.split('x');
+      return { a: parseInt(parts[0], 10), b: parseInt(parts[1], 10) };
+    };
+
+    Engine.isExampleInTier = function(key, tier) {
+      const { a } = Engine.parseKey(key);
+      return TIER_MULTIPLIERS[tier].includes(a);
+    };
+
+    Engine.poolForTier = function(tier) {
+      const allowed = TIER_MULTIPLIERS[tier];
+      const result = [];
+      for (const a of allowed) {
+        for (let b = 1; b <= 10; b++) {
+          result.push(Engine.exampleKey(a, b));
+        }
+      }
+      return result;
+    };
+
+    Engine.gradeAnswer = function(state, key, isCorrect, elapsedMs) {
+      const ex = state.examples[key];
+      ex.lastSeen = Engine.now(state);
+      if (isCorrect && elapsedMs <= FAST_THRESHOLD_MS) {
+        ex.correctFast++;
+        ex.streakFast++;
+        if (ex.streakFast >= STREAK_TO_LEARN && !ex.learned) {
+          ex.learned = true;
+          ex.learnedAt = Engine.now(state);
+        }
+      } else if (isCorrect) {
+        ex.correctSlow++;
+      } else {
+        ex.wrong++;
+        ex.streakFast = 0;
+        if (ex.learned) {
+          ex.learned = false;
+          ex.learnedAt = null;
+        }
+      }
+    };
+
+    Engine.weightFor = function(state, key) {
+      const ex = state.examples[key];
+      const total = ex.correctFast + ex.correctSlow + ex.wrong;
+
+      if (ex.learned) {
+        const age = Engine.now(state) - ex.lastSeen;
+        return age > FRESHNESS_MS ? 2 : 0;
+      }
+
+      let weight = 0;
+      if (total === 0) weight = Math.max(weight, 5);
+      if (ex.wrong > 0 && ex.streakFast < STREAK_TO_LEARN) weight = Math.max(weight, 8);
+      if (ex.streakFast === 1 || ex.streakFast === 2) weight = Math.max(weight, 4);
+      if (ex.correctFast < 2 && ex.correctSlow > 0) weight = Math.max(weight, 3);
+      return weight;
+    };
+
+    Engine.pickQuestion = function(state, lastKey) {
+      const pool = Engine.poolForTier(state.player.currentTier);
+      const candidates = [];
+      for (const key of pool) {
+        const w = Engine.weightFor(state, key);
+        if (w > 0) candidates.push({ key, w });
+      }
+      if (candidates.length === 0) return null;
+
+      const pickOnce = () => {
+        const sumW = candidates.reduce((s, c) => s + c.w, 0);
+        let r = Math.random() * sumW;
+        for (const c of candidates) {
+          r -= c.w;
+          if (r <= 0) return c.key;
+        }
+        return candidates[candidates.length - 1].key;
+      };
+
+      let chosenKey = pickOnce();
+      if (chosenKey === lastKey && candidates.length > 1) {
+        chosenKey = pickOnce();
+      }
+      const { a, b } = Engine.parseKey(chosenKey);
+      return { a, b, key: chosenKey };
+    };
+
+    Engine.levelForXP = function(xp) {
+      let level = 1;
+      for (let i = 0; i < LEVEL_THRESHOLDS.length - 1; i++) {
+        if (xp >= LEVEL_THRESHOLDS[i].xpToNext) {
+          level = LEVEL_THRESHOLDS[i + 1].level;
+        } else {
+          break;
+        }
+      }
+      return level;
+    };
+
+    Engine.awardXP = function(state, amount) {
+      const oldLevel = state.player.level;
+      state.player.xp += amount;
+      const newLevel = Engine.levelForXP(state.player.xp);
+      const events = [];
+      for (let lv = oldLevel + 1; lv <= newLevel; lv++) {
+        events.push({ type: 'level-up', newLevel: lv });
+      }
+      state.player.level = newLevel;
+      return events;
+    };
+
+    Engine.crackEgg = function(state) {
+      if (state.collection.nextDinoIndex >= DINOS.length) return [];
+      state.collection.activeEgg.crackProgress++;
+      if (state.collection.activeEgg.crackProgress >= EGG_CRACKS_TO_HATCH) {
+        const dinoId = DINOS[state.collection.nextDinoIndex].id;
+        state.collection.dinosOwned.push(dinoId);
+        state.collection.nextDinoIndex++;
+        state.collection.activeEgg.crackProgress = 0;
+        return [{ type: 'hatch', dinoId }];
+      }
+      return [];
+    };
+
+    Engine.checkTierUp = function(state) {
+      const tier = state.player.currentTier;
+      if (tier >= TIER_MULTIPLIERS.length - 1) return [];
+      const pool = Engine.poolForTier(tier);
+      const learned = pool.filter(k => state.examples[k].learned).length;
+      if (learned / pool.length >= TIER_UNLOCK_PCT) {
+        state.player.currentTier++;
+        return [{ type: 'tier-up', newTier: state.player.currentTier }];
+      }
+      return [];
+    };
+
+    Engine.checkAchievements = function(state) {
+      const totalCorrect = state.player.totalCorrectFast + state.player.totalCorrectSlow;
+      const learnedCount = Object.values(state.examples).filter(e => e.learned).length;
+
+      const tableMastered = (() => {
+        for (let n = 1; n <= 10; n++) {
+          let all = true;
+          for (let b = 1; b <= 10; b++) {
+            if (!state.examples[n + 'x' + b].learned) { all = false; break; }
+          }
+          if (all) return true;
+        }
+        return false;
+      })();
+
+      const checks = [
+        { id: 'first-correct',   pass: totalCorrect >= 1 },
+        { id: 'streak-fast-10',  pass: state.player.streakFast >= 10 },
+        { id: 'streak-25',       pass: state.player.streakAny >= 25 },
+        { id: 'first-dino',      pass: state.collection.dinosOwned.length >= 1 },
+        { id: 'total-50',        pass: totalCorrect >= 50 },
+        { id: 'total-200',       pass: totalCorrect >= 200 },
+        { id: 'table-master',    pass: tableMastered },
+        { id: 'learned-50',      pass: learnedCount >= 50 },
+        { id: 'daily-5',         pass: state.player.dailyStreak >= 5 },
+        { id: 'all-100',         pass: learnedCount >= 100 },
+        { id: 'tier-up-medium',  pass: state.player.currentTier >= 1 }
+      ];
+
+      const events = [];
+      for (const c of checks) {
+        if (c.pass && !state.achievements.unlocked.includes(c.id)) {
+          state.achievements.unlocked.push(c.id);
+          events.push({ type: 'achievement', id: c.id });
+        }
+      }
+      return events;
+    };
+
+    Engine.dateStringFromMs = function(ms) {
+      const d = new Date(ms);
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return y + '-' + m + '-' + day;
+    };
+
+    Engine.handleDailyStreak = function(state, todayStr) {
+      const last = state.player.lastOpenedAt;
+      if (last === todayStr) return;
+      if (!last) {
+        state.player.dailyStreak = 1;
+      } else {
+        const a = new Date(last + 'T00:00:00');
+        const b = new Date(todayStr + 'T00:00:00');
+        const diffDays = Math.round((b - a) / (24 * 3600 * 1000));
+        if (diffDays === 1) state.player.dailyStreak++;
+        else state.player.dailyStreak = 1;
+      }
+      state.player.lastOpenedAt = todayStr;
+    };
+
+    Engine.tick = function(state, key, isCorrect, elapsedMs) {
+      const events = [];
+      const wasLearned = state.examples[key].learned;
+
+      Engine.gradeAnswer(state, key, isCorrect, elapsedMs);
+
+      const fast = isCorrect && elapsedMs <= FAST_THRESHOLD_MS;
+
+      if (isCorrect && fast) {
+        state.player.totalCorrectFast++;
+        state.player.streakFast++;
+        state.player.streakAny++;
+      } else if (isCorrect) {
+        state.player.totalCorrectSlow++;
+        state.player.streakFast = 0;
+        state.player.streakAny++;
+      } else {
+        state.player.totalWrong++;
+        state.player.streakFast = 0;
+        state.player.streakAny = 0;
+      }
+
+      if (fast) events.push(...Engine.awardXP(state, FAST_XP));
+      else if (isCorrect) events.push(...Engine.awardXP(state, SLOW_XP));
+
+      if (!wasLearned && state.examples[key].learned) {
+        events.push(...Engine.awardXP(state, LEARNED_BONUS_XP));
+      }
+
+      if (isCorrect) {
+        const { a } = Engine.parseKey(key);
+        const tableId = 'x' + a;
+        if (!state.player.tablesMastered.includes(tableId)) {
+          let allLearned = true;
+          for (let b = 1; b <= 10; b++) {
+            if (!state.examples[a + 'x' + b].learned) { allLearned = false; break; }
+          }
+          if (allLearned) {
+            state.player.tablesMastered.push(tableId);
+            events.push(...Engine.awardXP(state, TABLE_BONUS_XP));
+          }
+        }
+      }
+
+      if (isCorrect) {
+        events.push(...Engine.crackEgg(state));
+      }
+
+      events.push(...Engine.checkTierUp(state));
+      events.push(...Engine.checkAchievements(state));
+
+      return events;
+    };
+
+    describe('Engine.now', () => {
+      it('returns Date.now() when timeOffset is 0', () => {
+        const state = createInitialState();
+        const before = Date.now();
+        const result = Engine.now(state);
+        const after = Date.now();
+        assert(result >= before && result <= after, 'now should be in [before, after]');
+      });
+
+      it('adds timeOffset to Date.now()', () => {
+        const state = createInitialState();
+        state.settings.timeOffset = 3 * 24 * 3600 * 1000;
+        const result = Engine.now(state);
+        const expected = Date.now() + state.settings.timeOffset;
+        assertApprox(result, expected, 100);
+      });
+    });
+
+    describe('Engine.exampleKey / parseKey', () => {
+      it('formats key as AxB', () => {
+        assertEq(Engine.exampleKey(7, 3), '7x3');
+      });
+
+      it('parses key into {a, b}', () => {
+        assertEq(Engine.parseKey('7x3'), { a: 7, b: 3 });
+      });
+    });
+
+    describe('Engine.isExampleInTier', () => {
+      it('7x3 is in tier 2 but not tier 0', () => {
+        assertEq(Engine.isExampleInTier('7x3', 0), false);
+        assertEq(Engine.isExampleInTier('7x3', 2), true);
+      });
+
+      it('3x7 is in tier 1 but not tier 0', () => {
+        assertEq(Engine.isExampleInTier('3x7', 0), false);
+        assertEq(Engine.isExampleInTier('3x7', 1), true);
+      });
+
+      it('1x7 is in tier 0', () => {
+        assertEq(Engine.isExampleInTier('1x7', 0), true);
+      });
+
+      it('membership uses first multiplier only', () => {
+        assertEq(Engine.isExampleInTier('7x1', 0), false);
+        assertEq(Engine.isExampleInTier('1x7', 0), true);
+      });
+    });
+
+    describe('Engine.poolForTier', () => {
+      it('tier 0 has 40 examples', () => {
+        assertEq(Engine.poolForTier(0).length, 40);
+      });
+
+      it('tier 1 has 60 examples', () => {
+        assertEq(Engine.poolForTier(1).length, 60);
+      });
+
+      it('tier 2 has 100 examples', () => {
+        assertEq(Engine.poolForTier(2).length, 100);
+      });
+
+      it('tier 0 includes 1x7 but not 7x1', () => {
+        const pool = Engine.poolForTier(0);
+        assert(pool.includes('1x7'));
+        assert(!pool.includes('7x1'));
+      });
+    });
+
+    describe('Engine.gradeAnswer — fast correct', () => {
+      it('increments correctFast and streakFast', () => {
+        const s = createInitialState();
+        Engine.gradeAnswer(s, '2x3', true, 3000);
+        assertEq(s.examples['2x3'].correctFast, 1);
+        assertEq(s.examples['2x3'].streakFast, 1);
+        assertEq(s.examples['2x3'].learned, false);
+      });
+
+      it('marks learned when streakFast reaches 3', () => {
+        const s = createInitialState();
+        Engine.gradeAnswer(s, '2x3', true, 3000);
+        Engine.gradeAnswer(s, '2x3', true, 3000);
+        Engine.gradeAnswer(s, '2x3', true, 3000);
+        assertEq(s.examples['2x3'].learned, true);
+        assert(s.examples['2x3'].learnedAt !== null);
+      });
+
+      it('boundary: 5000ms is fast', () => {
+        const s = createInitialState();
+        Engine.gradeAnswer(s, '2x3', true, 5000);
+        assertEq(s.examples['2x3'].correctFast, 1);
+        assertEq(s.examples['2x3'].correctSlow, 0);
+      });
+    });
+
+    describe('Engine.gradeAnswer — slow correct', () => {
+      it('5001ms is slow', () => {
+        const s = createInitialState();
+        Engine.gradeAnswer(s, '2x3', true, 5001);
+        assertEq(s.examples['2x3'].correctSlow, 1);
+        assertEq(s.examples['2x3'].correctFast, 0);
+      });
+
+      it('does not advance streakFast', () => {
+        const s = createInitialState();
+        s.examples['2x3'].streakFast = 2;
+        Engine.gradeAnswer(s, '2x3', true, 6000);
+        assertEq(s.examples['2x3'].streakFast, 2);
+        assertEq(s.examples['2x3'].learned, false);
+      });
+
+      it('does not reset existing streakFast', () => {
+        const s = createInitialState();
+        s.examples['2x3'].streakFast = 1;
+        Engine.gradeAnswer(s, '2x3', true, 6000);
+        assertEq(s.examples['2x3'].streakFast, 1);
+      });
+    });
+
+    describe('Engine.gradeAnswer — wrong', () => {
+      it('increments wrong, resets streakFast', () => {
+        const s = createInitialState();
+        s.examples['2x3'].streakFast = 2;
+        Engine.gradeAnswer(s, '2x3', false, 4000);
+        assertEq(s.examples['2x3'].wrong, 1);
+        assertEq(s.examples['2x3'].streakFast, 0);
+      });
+
+      it('removes learned status when wrong on learned example', () => {
+        const s = createInitialState();
+        s.examples['2x3'].learned = true;
+        s.examples['2x3'].learnedAt = 12345;
+        s.examples['2x3'].streakFast = 3;
+        Engine.gradeAnswer(s, '2x3', false, 3000);
+        assertEq(s.examples['2x3'].learned, false);
+        assertEq(s.examples['2x3'].learnedAt, null);
+        assertEq(s.examples['2x3'].streakFast, 0);
+      });
+    });
+
+    describe('Engine.gradeAnswer — lastSeen', () => {
+      it('updates lastSeen to Engine.now()', () => {
+        const s = createInitialState();
+        s.settings.timeOffset = 0;
+        const before = Date.now();
+        Engine.gradeAnswer(s, '2x3', true, 3000);
+        const after = Date.now();
+        assert(s.examples['2x3'].lastSeen >= before);
+        assert(s.examples['2x3'].lastSeen <= after);
+      });
+    });
+
+    describe('Engine.weightFor', () => {
+      it('returns 5 for never-shown example', () => {
+        const s = createInitialState();
+        assertEq(Engine.weightFor(s, '2x3'), 5);
+      });
+
+      it('returns 8 for example with wrong > 0 and streakFast < 3', () => {
+        const s = createInitialState();
+        s.examples['2x3'].wrong = 1;
+        s.examples['2x3'].streakFast = 0;
+        assertEq(Engine.weightFor(s, '2x3'), 8);
+      });
+
+      it('returns 4 for example with streakFast == 1', () => {
+        const s = createInitialState();
+        s.examples['2x3'].correctFast = 1;
+        s.examples['2x3'].streakFast = 1;
+        assertEq(Engine.weightFor(s, '2x3'), 4);
+      });
+
+      it('returns 4 for example with streakFast == 2', () => {
+        const s = createInitialState();
+        s.examples['2x3'].correctFast = 2;
+        s.examples['2x3'].streakFast = 2;
+        assertEq(Engine.weightFor(s, '2x3'), 4);
+      });
+
+      it('returns 3 for example with slow correct only', () => {
+        const s = createInitialState();
+        s.examples['2x3'].correctSlow = 2;
+        s.examples['2x3'].correctFast = 1;
+        assertEq(Engine.weightFor(s, '2x3'), 3);
+      });
+
+      it('returns 0 for fresh learned', () => {
+        const s = createInitialState();
+        s.examples['2x3'].learned = true;
+        s.examples['2x3'].lastSeen = Engine.now(s);
+        s.examples['2x3'].streakFast = 3;
+        assertEq(Engine.weightFor(s, '2x3'), 0);
+      });
+
+      it('returns 2 for stale learned', () => {
+        const s = createInitialState();
+        s.examples['2x3'].learned = true;
+        s.examples['2x3'].lastSeen = Engine.now(s) - 4 * 24 * 3600 * 1000;
+        s.examples['2x3'].streakFast = 3;
+        assertEq(Engine.weightFor(s, '2x3'), 2);
+      });
+
+      it('takes max when multiple rules apply', () => {
+        const s = createInitialState();
+        s.examples['2x3'].correctFast = 1;
+        s.examples['2x3'].streakFast = 1;
+        s.examples['2x3'].wrong = 1;
+        assertEq(Engine.weightFor(s, '2x3'), 8);
+      });
+    });
+
+    describe('Engine.pickQuestion', () => {
+      it('returns null when no examples have weight > 0', () => {
+        const s = createInitialState();
+        for (const key of Engine.poolForTier(0)) {
+          s.examples[key].learned = true;
+          s.examples[key].lastSeen = Engine.now(s);
+          s.examples[key].streakFast = 3;
+        }
+        const result = Engine.pickQuestion(s, null);
+        assertEq(result, null);
+      });
+
+      it('returns example from current tier pool only', () => {
+        const s = createInitialState();
+        s.player.currentTier = 0;
+        const tierPool = new Set(Engine.poolForTier(0));
+        for (let i = 0; i < 50; i++) {
+          const result = Engine.pickQuestion(s, null);
+          assert(result !== null, 'should not be null');
+          assert(tierPool.has(result.key), result.key + ' should be in tier 0');
+        }
+      });
+
+      it('avoids returning same key as lastKey', () => {
+        const s = createInitialState();
+        s.player.currentTier = 0;
+        const lastKey = '2x3';
+        let differentCount = 0;
+        for (let i = 0; i < 30; i++) {
+          const r = Engine.pickQuestion(s, lastKey);
+          if (r && r.key !== lastKey) differentCount++;
+        }
+        assert(differentCount > 25, 'most picks should differ from lastKey');
+      });
+
+      it('returns {a, b, key} structure', () => {
+        const s = createInitialState();
+        const result = Engine.pickQuestion(s, null);
+        assert(result !== null);
+        assert(typeof result.a === 'number');
+        assert(typeof result.b === 'number');
+        assertEq(Engine.exampleKey(result.a, result.b), result.key);
+      });
+    });
+
+    describe('Engine.levelForXP', () => {
+      it('xp 0 → level 1', () => { assertEq(Engine.levelForXP(0), 1); });
+      it('xp 99 → level 1', () => { assertEq(Engine.levelForXP(99), 1); });
+      it('xp 100 → level 2', () => { assertEq(Engine.levelForXP(100), 2); });
+      it('xp 250 → level 3', () => { assertEq(Engine.levelForXP(250), 3); });
+      it('xp 2500 → level 7', () => { assertEq(Engine.levelForXP(2500), 7); });
+      it('xp 100000 → level 7 (capped)', () => { assertEq(Engine.levelForXP(100000), 7); });
+    });
+
+    describe('Engine.awardXP', () => {
+      it('adds xp to player', () => {
+        const s = createInitialState();
+        const events = Engine.awardXP(s, 30);
+        assertEq(s.player.xp, 30);
+        assertEq(events, []);
+      });
+
+      it('updates level when crossing threshold', () => {
+        const s = createInitialState();
+        s.player.xp = 90;
+        const events = Engine.awardXP(s, 20);
+        assertEq(s.player.xp, 110);
+        assertEq(s.player.level, 2);
+        assertEq(events.length, 1);
+        assertEq(events[0].type, 'level-up');
+        assertEq(events[0].newLevel, 2);
+      });
+
+      it('returns no event when xp added but level same', () => {
+        const s = createInitialState();
+        s.player.xp = 50;
+        const events = Engine.awardXP(s, 20);
+        assertEq(s.player.level, 1);
+        assertEq(events, []);
+      });
+
+      it('emits multiple level-ups if xp jump is big enough', () => {
+        const s = createInitialState();
+        s.player.xp = 0;
+        const events = Engine.awardXP(s, 600);
+        assertEq(s.player.level, 4);
+        assertEq(events.length, 3);
+      });
+    });
+
+    describe('Engine.crackEgg', () => {
+      it('increments crackProgress', () => {
+        const s = createInitialState();
+        const events = Engine.crackEgg(s);
+        assertEq(s.collection.activeEgg.crackProgress, 1);
+        assertEq(events, []);
+      });
+
+      it('hatches at 50', () => {
+        const s = createInitialState();
+        s.collection.activeEgg.crackProgress = 49;
+        const events = Engine.crackEgg(s);
+        assertEq(s.collection.activeEgg.crackProgress, 0);
+        assertEq(s.collection.dinosOwned, ['velociraptor']);
+        assertEq(s.collection.nextDinoIndex, 1);
+        assertEq(events.length, 1);
+        assertEq(events[0].type, 'hatch');
+        assertEq(events[0].dinoId, 'velociraptor');
+      });
+
+      it('does nothing when all dinos collected', () => {
+        const s = createInitialState();
+        s.collection.nextDinoIndex = 20;
+        s.collection.activeEgg.crackProgress = 49;
+        const events = Engine.crackEgg(s);
+        assertEq(s.collection.activeEgg.crackProgress, 49);
+        assertEq(events, []);
+      });
+    });
+
+    describe('Engine.checkTierUp', () => {
+      it('does not advance when < 80% of tier learned', () => {
+        const s = createInitialState();
+        const pool = Engine.poolForTier(0);
+        for (let i = 0; i < 31; i++) { s.examples[pool[i]].learned = true; }
+        const events = Engine.checkTierUp(s);
+        assertEq(s.player.currentTier, 0);
+        assertEq(events, []);
+      });
+
+      it('advances when >= 80% of tier learned', () => {
+        const s = createInitialState();
+        const pool = Engine.poolForTier(0);
+        for (let i = 0; i < 32; i++) { s.examples[pool[i]].learned = true; }
+        const events = Engine.checkTierUp(s);
+        assertEq(s.player.currentTier, 1);
+        assertEq(events.length, 1);
+        assertEq(events[0].type, 'tier-up');
+        assertEq(events[0].newTier, 1);
+      });
+
+      it('does not advance past tier 2', () => {
+        const s = createInitialState();
+        s.player.currentTier = 2;
+        for (const key of Object.keys(s.examples)) { s.examples[key].learned = true; }
+        const events = Engine.checkTierUp(s);
+        assertEq(s.player.currentTier, 2);
+        assertEq(events, []);
+      });
+    });
+
+    describe('Engine.checkAchievements', () => {
+      it('first-correct on first correct', () => {
+        const s = createInitialState();
+        s.player.totalCorrectFast = 1;
+        const events = Engine.checkAchievements(s);
+        assert(events.map(e => e.id).includes('first-correct'));
+      });
+
+      it('does not re-emit already unlocked achievement', () => {
+        const s = createInitialState();
+        s.achievements.unlocked.push('first-correct');
+        s.player.totalCorrectFast = 1;
+        const events = Engine.checkAchievements(s);
+        assert(!events.map(e => e.id).includes('first-correct'));
+      });
+
+      it('streak-fast-10 when streakFast >= 10', () => {
+        const s = createInitialState();
+        s.player.streakFast = 10;
+        assert(Engine.checkAchievements(s).some(e => e.id === 'streak-fast-10'));
+      });
+
+      it('streak-25 when streakAny >= 25', () => {
+        const s = createInitialState();
+        s.player.streakAny = 25;
+        assert(Engine.checkAchievements(s).some(e => e.id === 'streak-25'));
+      });
+
+      it('first-dino when dinosOwned non-empty', () => {
+        const s = createInitialState();
+        s.collection.dinosOwned.push('velociraptor');
+        assert(Engine.checkAchievements(s).some(e => e.id === 'first-dino'));
+      });
+
+      it('total-50 at 50 correct', () => {
+        const s = createInitialState();
+        s.player.totalCorrectFast = 30;
+        s.player.totalCorrectSlow = 20;
+        assert(Engine.checkAchievements(s).some(e => e.id === 'total-50'));
+      });
+
+      it('learned-50 at 50 learned examples', () => {
+        const s = createInitialState();
+        Object.keys(s.examples).slice(0, 50).forEach(k => { s.examples[k].learned = true; });
+        assert(Engine.checkAchievements(s).some(e => e.id === 'learned-50'));
+      });
+
+      it('table-master when all 10 N-* learned', () => {
+        const s = createInitialState();
+        for (let b = 1; b <= 10; b++) s.examples['5x' + b].learned = true;
+        assert(Engine.checkAchievements(s).some(e => e.id === 'table-master'));
+      });
+
+      it('all-100 when all examples learned', () => {
+        const s = createInitialState();
+        for (const k of Object.keys(s.examples)) s.examples[k].learned = true;
+        assert(Engine.checkAchievements(s).some(e => e.id === 'all-100'));
+      });
+
+      it('tier-up-medium when currentTier === 1', () => {
+        const s = createInitialState();
+        s.player.currentTier = 1;
+        assert(Engine.checkAchievements(s).some(e => e.id === 'tier-up-medium'));
+      });
+
+      it('events have shape {id, type:"achievement"}', () => {
+        const s = createInitialState();
+        s.player.totalCorrectFast = 1;
+        const events = Engine.checkAchievements(s);
+        const a = events.find(e => e.id === 'first-correct');
+        assertEq(a.type, 'achievement');
+      });
+    });
+
+    describe('Engine.dateStringFromMs / handleDailyStreak', () => {
+      it('first ever open: streak becomes 1', () => {
+        const s = createInitialState();
+        Engine.handleDailyStreak(s, '2026-01-15');
+        assertEq(s.player.dailyStreak, 1);
+        assertEq(s.player.lastOpenedAt, '2026-01-15');
+      });
+
+      it('same day reopen: streak unchanged', () => {
+        const s = createInitialState();
+        s.player.lastOpenedAt = '2026-01-15';
+        s.player.dailyStreak = 3;
+        Engine.handleDailyStreak(s, '2026-01-15');
+        assertEq(s.player.dailyStreak, 3);
+      });
+
+      it('next day: streak increments', () => {
+        const s = createInitialState();
+        s.player.lastOpenedAt = '2026-01-15';
+        s.player.dailyStreak = 3;
+        Engine.handleDailyStreak(s, '2026-01-16');
+        assertEq(s.player.dailyStreak, 4);
+        assertEq(s.player.lastOpenedAt, '2026-01-16');
+      });
+
+      it('two-day gap: streak resets to 1', () => {
+        const s = createInitialState();
+        s.player.lastOpenedAt = '2026-01-15';
+        s.player.dailyStreak = 3;
+        Engine.handleDailyStreak(s, '2026-01-17');
+        assertEq(s.player.dailyStreak, 1);
+        assertEq(s.player.lastOpenedAt, '2026-01-17');
+      });
+
+      it('handles month/year boundary correctly', () => {
+        const s = createInitialState();
+        s.player.lastOpenedAt = '2026-01-31';
+        s.player.dailyStreak = 5;
+        Engine.handleDailyStreak(s, '2026-02-01');
+        assertEq(s.player.dailyStreak, 6);
+      });
+    });
+
+    describe('Engine.tick — full answer flow', () => {
+      it('fast correct: awards 10 XP, increments totals, cracks egg', () => {
+        const s = createInitialState();
+        const events = Engine.tick(s, '2x3', true, 3000);
+        assertEq(s.player.xp, 10);
+        assertEq(s.player.totalCorrectFast, 1);
+        assertEq(s.player.streakFast, 1);
+        assertEq(s.player.streakAny, 1);
+        assertEq(s.collection.activeEgg.crackProgress, 1);
+        assert(events.some(e => e.type === 'achievement' && e.id === 'first-correct'));
+      });
+
+      it('slow correct: awards 5 XP, resets streakFast, advances streakAny', () => {
+        const s = createInitialState();
+        s.player.streakFast = 5;
+        s.player.streakAny = 5;
+        Engine.tick(s, '2x3', true, 6000);
+        assertEq(s.player.xp, 5);
+        assertEq(s.player.totalCorrectSlow, 1);
+        assertEq(s.player.streakFast, 0);
+        assertEq(s.player.streakAny, 6);
+      });
+
+      it('wrong: 0 XP, resets both streaks, no egg crack', () => {
+        const s = createInitialState();
+        s.player.streakFast = 5;
+        s.player.streakAny = 5;
+        Engine.tick(s, '2x3', false, 3000);
+        assertEq(s.player.xp, 0);
+        assertEq(s.player.totalWrong, 1);
+        assertEq(s.player.streakFast, 0);
+        assertEq(s.player.streakAny, 0);
+        assertEq(s.collection.activeEgg.crackProgress, 0);
+      });
+
+      it('learning transition adds +30 bonus XP', () => {
+        const s = createInitialState();
+        s.examples['2x3'].streakFast = 2;
+        s.examples['2x3'].correctFast = 2;
+        Engine.tick(s, '2x3', true, 3000);
+        assertEq(s.player.xp, 40);
+      });
+
+      it('table master adds +200 bonus XP and records in tablesMastered', () => {
+        const s = createInitialState();
+        for (let b = 1; b <= 9; b++) { s.examples['5x' + b].learned = true; }
+        s.examples['5x10'].streakFast = 2;
+        Engine.tick(s, '5x10', true, 3000);
+        assertEq(s.player.xp, 240);
+        assert(s.player.tablesMastered.includes('x5'));
+      });
+
+      it('table master bonus only awarded once per table', () => {
+        const s = createInitialState();
+        s.player.tablesMastered = ['x5'];
+        for (let b = 1; b <= 10; b++) s.examples['5x' + b].learned = true;
+        Engine.tick(s, '2x3', true, 3000);
+        assertEq(s.player.xp, 10);
+      });
+
+      it('hatch event emitted when 50th crack', () => {
+        const s = createInitialState();
+        s.collection.activeEgg.crackProgress = 49;
+        const events = Engine.tick(s, '2x3', true, 3000);
+        assert(events.some(e => e.type === 'hatch' && e.dinoId === 'velociraptor'));
+      });
+
+      it('lastSeen updated', () => {
+        const s = createInitialState();
+        Engine.tick(s, '2x3', true, 3000);
+        assert(s.examples['2x3'].lastSeen > 0);
+      });
+    });
+
+    // === SECTION: VIEWS ===
+    function el(tag, attrs, ...children) {
+      const e = document.createElement(tag);
+      if (attrs) {
+        for (const [k, v] of Object.entries(attrs)) {
+          if (k === 'onclick') e.addEventListener('click', v);
+          else if (k === 'style' && typeof v === 'object') Object.assign(e.style, v);
+          else if (k === 'className') e.className = v;
+          else if (k === 'html') e.innerHTML = v;
+          else e.setAttribute(k, v);
+        }
+      }
+      for (const c of children) {
+        if (c == null) continue;
+        if (typeof c === 'string' || typeof c === 'number') e.appendChild(document.createTextNode(String(c)));
+        else e.appendChild(c);
+      }
+      return e;
+    }
+
+    function pickRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+    function xpInLevel(state) {
+      let cumulative = 0;
+      for (let i = 0; i < LEVEL_THRESHOLDS.length; i++) {
+        if (state.player.xp < cumulative + LEVEL_THRESHOLDS[i].xpToNext) {
+          return { current: state.player.xp - cumulative, max: LEVEL_THRESHOLDS[i].xpToNext };
+        }
+        cumulative += LEVEL_THRESHOLDS[i].xpToNext;
+      }
+      return { current: 1, max: 1 };
+    }
+
+    function levelName(level) {
+      return LEVEL_THRESHOLDS[level - 1].name;
+    }
+
+    function renderHub(state) {
+      const app = document.getElementById('app');
+      app.innerHTML = '';
+
+      // Header
+      const greeting = pickRandom(GREETINGS) + ', ' + pickRandom(NAMES) + '! 🦕';
+      const header = el('div', { className: 'header' },
+        el('h1', null, greeting),
+        el('div', { className: 'header-actions' },
+          el('button', { onclick: () => openSettingsMenu(state) }, '⚙')
+        )
+      );
+      app.appendChild(header);
+
+      // Banner: returning user with stuff to repeat
+      const stalePool = [];
+      for (const key of Engine.poolForTier(state.player.currentTier)) {
+        if (Engine.weightFor(state, key) > 0) stalePool.push(key);
+      }
+      if (state.player.dailyStreak >= 2 && stalePool.length > 0) {
+        const banner = el('div', { className: 'banner' },
+          el('span', null, '📅 С возвращением! Тебя ждёт ' + stalePool.length + ' примеров'),
+          el('button', { onclick: (e) => e.target.closest('.banner').remove() }, 'ОК')
+        );
+        app.appendChild(banner);
+      }
+
+      // XP bar
+      const lvl = xpInLevel(state);
+      const xpBar = el('div', { className: 'xp-bar' },
+        el('div', { className: 'xp-bar-label' },
+          el('span', null, 'Lv.' + state.player.level + ' ' + levelName(state.player.level)),
+          el('span', null, lvl.current + ' / ' + lvl.max + ' XP')
+        ),
+        el('div', { className: 'xp-bar-track' },
+          el('div', { className: 'xp-bar-fill', style: { width: (100 * lvl.current / lvl.max) + '%' } })
+        )
+      );
+      app.appendChild(xpBar);
+
+      // Play button
+      const playBtn = el('button', {
+        className: 'btn btn-primary',
+        onclick: () => startRound(state)
+      }, '🦖 ПОИГРАТЬ!');
+      app.appendChild(el('div', { className: 'play-button-wrap' }, playBtn));
+
+      // Placeholder divs for sub-renders
+      app.appendChild(el('div', { id: 'hub-active-egg' }));
+      app.appendChild(el('div', { id: 'hub-collection' }));
+      app.appendChild(el('div', { id: 'hub-footer' }));
+
+      renderActiveEgg(state);
+      renderCollection(state);
+      renderHubFooter(state);
+    }
+
+    // Stubs — implemented in later tasks
+    function openSettingsMenu(state) { openSettingsMenuReal(state); }
+    let _trainer = null;
+
+    function startRound(state) {
+      _trainer = {
+        state,
+        roundNumber: 1,
+        roundIndex: 0,
+        roundResults: [],
+        currentQuestion: null,
+        startTime: 0,
+        phase: 'asking',
+        timerInterval: null,
+        timeoutTimer: null,
+        lastKey: null,
+        roundXPGained: 0
+      };
+      state.player.sessionsCount++;
+      Storage.save(state);
+      renderTrainer();
+      pickAndShow();
+    }
+
+    function renderTrainer() {
+      const t = _trainer;
+      const app = document.getElementById('app');
+      app.innerHTML = '';
+
+      const eggCrack = t.state.collection.activeEgg.crackProgress;
+      const eggDots = '▰'.repeat(Math.floor(eggCrack / 10)) + '▱'.repeat(5 - Math.floor(eggCrack / 10));
+      const header = el('div', { className: 'trainer-header' },
+        el('button', { className: 'btn btn-secondary', onclick: returnToHub }, '← домой'),
+        el('div', null, '🔥 серия: ' + t.state.player.streakAny),
+        el('div', null, '🥚 ' + eggDots)
+      );
+      app.appendChild(header);
+
+      const qContainer = el('div', { className: 'trainer-question', id: 'q-container' });
+      app.appendChild(qContainer);
+
+      app.appendChild(el('div', { className: 'round-progress', id: 'round-progress' },
+        'Раунд: вопрос ' + (t.roundIndex + 1) + ' из ' + ROUND_SIZE
+      ));
+    }
+
+    function returnToHub() {
+      if (_trainer && _trainer.timerInterval) clearInterval(_trainer.timerInterval);
+      if (_trainer && _trainer.timeoutTimer) clearTimeout(_trainer.timeoutTimer);
+      _trainer = null;
+      renderHub(window.State);
+    }
+
+    function pickAndShow() {
+      const t = _trainer;
+      const q = Engine.pickQuestion(t.state, t.lastKey);
+      if (!q) {
+        showCongrats();
+        return;
+      }
+      t.currentQuestion = q;
+      t.phase = 'asking';
+      t.startTime = Date.now();
+      const c = document.getElementById('q-container');
+      c.innerHTML = '';
+      c.appendChild(el('div', { className: 'q' }, q.a + ' × ' + q.b + ' = ?'));
+      const input = el('input', { type: 'number', inputmode: 'numeric', id: 'answer-input', autocomplete: 'off' });
+      c.appendChild(input);
+      const timer = el('div', { className: 'timer', id: 'timer' }, '⏱ 0.0с');
+      c.appendChild(timer);
+      input.addEventListener('keydown', onAnswerKey);
+      input.focus();
+
+      if (t.timerInterval) clearInterval(t.timerInterval);
+      t.timerInterval = setInterval(() => {
+        if (t.phase !== 'asking') return;
+        const elapsed = (Date.now() - t.startTime) / 1000;
+        const remaining = INPUT_TIMEOUT_MS / 1000 - elapsed;
+        const tEl = document.getElementById('timer');
+        if (tEl) tEl.textContent = '⏱ ' + Math.max(0, remaining).toFixed(1) + 'с';
+      }, 100);
+
+      if (t.timeoutTimer) clearTimeout(t.timeoutTimer);
+      t.timeoutTimer = setTimeout(gradeTimeout, INPUT_TIMEOUT_MS);
+    }
+
+    function onAnswerKey(ev) {
+      if (ev.key !== 'Enter') return;
+      const t = _trainer;
+      if (t.phase !== 'asking') return;
+      const input = document.getElementById('answer-input');
+      const raw = input.value.trim();
+      if (raw === '') return;
+      const answer = parseInt(raw, 10);
+      if (isNaN(answer)) return;
+      grade(answer);
+    }
+
+    function showCongrats() {
+      const app = document.getElementById('app');
+      app.innerHTML = '';
+      app.appendChild(el('div', { className: 'round-end' },
+        el('h2', null, '🎉 Ты выучила всё на этом уровне!'),
+        el('p', null, 'Открой следующий уровень, отвечая правильно на оставшиеся примеры.'),
+        el('button', { className: 'btn', onclick: returnToHub }, '← Домой')
+      ));
+    }
+
+    function gradeTimeout() {
+      const t = _trainer;
+      if (!t || t.phase !== 'asking') return;
+      t.phase = 'grading';
+      clearInterval(t.timerInterval);
+      clearTimeout(t.timeoutTimer);
+      const correctAnswer = t.currentQuestion.a * t.currentQuestion.b;
+      const xpBefore = t.state.player.xp;
+      const events = Engine.tick(t.state, t.currentQuestion.key, false, INPUT_TIMEOUT_MS);
+      Storage.save(t.state);
+      t.roundXPGained += t.state.player.xp - xpBefore;
+      t.roundResults.push({ correct: false, fast: false, key: t.currentQuestion.key, elapsed: INPUT_TIMEOUT_MS });
+      t.lastKey = t.currentQuestion.key;
+      // Show correct answer, same as wrong
+      const input = document.getElementById('answer-input');
+      if (input) input.disabled = true;
+      const c = document.getElementById('q-container');
+      if (c) {
+        c.appendChild(el('div', { className: 'feedback-text' }, 'Время вышло! Запомни:'));
+        c.appendChild(el('div', { className: 'correct-answer' }, t.currentQuestion.a + ' × ' + t.currentQuestion.b + ' = ' + correctAnswer));
+      }
+      t.phase = 'feedback';
+      runEventAnimations(events, () => { setTimeout(advance, FEEDBACK_MS_WRONG); });
+    }
+
+    function grade(answer) {
+      const t = _trainer;
+      if (t.phase !== 'asking') return;
+      t.phase = 'grading';
+      const elapsed = Date.now() - t.startTime;
+      if (t.timerInterval) clearInterval(t.timerInterval);
+      if (t.timeoutTimer) { clearTimeout(t.timeoutTimer); t.timeoutTimer = null; }
+      const correctAnswer = t.currentQuestion.a * t.currentQuestion.b;
+      const isCorrect = (answer === correctAnswer);
+      const fast = isCorrect && elapsed <= FAST_THRESHOLD_MS;
+      const xpBefore = t.state.player.xp;
+
+      const events = Engine.tick(t.state, t.currentQuestion.key, isCorrect, elapsed);
+      Storage.save(t.state);
+
+      const xpGained = t.state.player.xp - xpBefore;
+      t.roundXPGained += xpGained;
+      t.roundResults.push({ correct: isCorrect, fast: fast, key: t.currentQuestion.key, elapsed });
+      t.lastKey = t.currentQuestion.key;
+
+      showFeedback(isCorrect, fast, correctAnswer, xpGained, events);
+    }
+
+    function showFeedback(isCorrect, fast, correctAnswer, xpGained, events) {
+      const t = _trainer;
+      t.phase = 'feedback';
+      const input = document.getElementById('answer-input');
+      input.disabled = true;
+
+      let cls, msg, duration;
+      if (fast) { cls = 'correct'; msg = 'Молодец! +' + xpGained + ' XP'; duration = FEEDBACK_MS_FAST; }
+      else if (isCorrect) { cls = 'correct-slow'; msg = 'Правильно, но подумай быстрее. +' + xpGained + ' XP'; duration = FEEDBACK_MS_SLOW; }
+      else { cls = 'wrong'; msg = 'Запомни: ' + t.currentQuestion.a + ' × ' + t.currentQuestion.b + ' = ' + correctAnswer; duration = FEEDBACK_MS_WRONG; }
+
+      input.classList.add(cls);
+
+      const c = document.getElementById('q-container');
+      const fbEl = el('div', { className: 'feedback-text' }, msg);
+      c.appendChild(fbEl);
+      if (!isCorrect) {
+        c.appendChild(el('div', { className: 'correct-answer' }, t.currentQuestion.a + ' × ' + t.currentQuestion.b + ' = ' + correctAnswer));
+      }
+
+      runEventAnimations(events, () => {
+        setTimeout(advance, duration);
+      });
+    }
+
+    function runEventAnimations(events, done) {
+      const hatch = events.find(e => e.type === 'hatch');
+      const achievements = events.filter(e => e.type === 'achievement');
+      const levelUps = events.filter(e => e.type === 'level-up');
+
+      const playToasts = () => {
+        for (const a of achievements) showAchievementToast(a.id);
+        for (const lu of levelUps) showLevelUpAnimation(lu.newLevel);
+        done();
+      };
+
+      if (hatch) showHatchAnimation(hatch.dinoId, playToasts);
+      else playToasts();
+    }
+
+    function showAchievementToast(achId) {
+      const a = ACHIEVEMENTS.find(x => x.id === achId);
+      if (!a) return;
+      const toast = el('div', { className: 'toast', onclick: () => toast.remove() },
+        a.icon + ' Новая ачивка: ' + a.name
+      );
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 4000);
+    }
+
+    function showLevelUpAnimation(newLevel) {
+      const overlay = el('div', { className: 'levelup-overlay' });
+      overlay.appendChild(el('div', { className: 'levelup-text' },
+        'Lv.' + newLevel + ' — ' + levelName(newLevel) + '! 🎉'
+      ));
+      document.body.appendChild(overlay);
+      spawnConfetti(40);
+      setTimeout(() => overlay.remove(), 2000);
+    }
+
+    function spawnConfetti(count) {
+      const colors = ['#fbbf24', '#f97316', '#ef4444', '#10b981', '#3b82f6'];
+      for (let i = 0; i < count; i++) {
+        const c = el('div', { className: 'confetti' });
+        c.style.left = Math.random() * 100 + '%';
+        c.style.background = colors[Math.floor(Math.random() * colors.length)];
+        c.style.animation = 'confetti-fall ' + (1 + Math.random()) + 's ' + (Math.random() * 0.5) + 's forwards';
+        document.body.appendChild(c);
+        setTimeout(() => c.remove(), 2500);
+      }
+    }
+
+    function showHatchAnimation(dinoId, done) {
+      const dino = DINOS.find(d => d.id === dinoId);
+      if (!dino) { done(); return; }
+
+      const overlay = el('div', { className: 'hatch-overlay' });
+      const eggSpan = el('div', { className: 'hatch-egg cracking' }, '🥚');
+      overlay.appendChild(eggSpan);
+      document.body.appendChild(overlay);
+
+      setTimeout(() => {
+        overlay.innerHTML = '';
+        overlay.appendChild(el('div', { className: 'hatch-dino' }, dinoVisual(dino, 'dino-lg')));
+        overlay.appendChild(el('div', { className: 'hatch-text' }, 'Новый динозавр: ' + dino.name + '!'));
+        const closeBtn = el('button', {
+          className: 'btn btn-primary',
+          style: { marginTop: '24px', fontSize: '20px', padding: '16px 32px' },
+          onclick: () => { overlay.remove(); done(); }
+        }, 'Класс!');
+        overlay.appendChild(closeBtn);
+        spawnConfetti(60);
+      }, 1500);
+    }
+
+    function advance() {
+      const t = _trainer;
+      t.roundIndex++;
+      if (t.roundIndex >= ROUND_SIZE) {
+        finishRound();
+      } else {
+        renderTrainer();
+        pickAndShow();
+      }
+    }
+
+    function finishRound() {
+      const t = _trainer;
+      const bonus = ROUND_BONUS_XP;
+      Engine.awardXP(t.state, bonus);
+      t.roundXPGained += bonus;
+
+      const allFast = t.roundResults.every(r => r.fast);
+      if (allFast && t.roundResults.length === ROUND_SIZE && !t.state.achievements.unlocked.includes('perfect-round')) {
+        t.state.achievements.unlocked.push('perfect-round');
+      }
+      Storage.save(t.state);
+      renderRoundEnd();
+    }
+
+    function renderRoundEnd() {
+      const t = _trainer;
+      const correctCount = t.roundResults.filter(r => r.correct).length;
+      const fastCount = t.roundResults.filter(r => r.fast).length;
+      const eggCrack = t.state.collection.activeEgg.crackProgress;
+
+      const app = document.getElementById('app');
+      app.innerHTML = '';
+      const wrap = el('div', { className: 'round-end' },
+        el('h2', null, '🏁 Раунд закончен!'),
+        el('div', { className: 'stats' },
+          el('div', null, 'Правильно: ' + correctCount + ' / ' + ROUND_SIZE),
+          el('div', null, 'Из них быстро: ' + fastCount),
+          el('div', null, 'Получено: +' + t.roundXPGained + ' XP'),
+          el('div', null, 'Серия: 🔥 ' + t.state.player.streakAny),
+          el('div', null, 'Яйцо: ' + eggCrack + '/' + EGG_CRACKS_TO_HATCH)
+        ),
+        el('div', { className: 'actions' },
+          el('button', { className: 'btn btn-primary', style: { fontSize: '20px', padding: '16px 32px' }, onclick: () => startRound(t.state) }, 'Ещё 10! 🦖'),
+          el('button', { className: 'btn btn-secondary', onclick: returnToHub }, '← Домой')
+        )
+      );
+      app.appendChild(wrap);
+    }
+
+    function renderActiveEgg(state) {
+      const target = document.getElementById('hub-active-egg');
+      target.innerHTML = '';
+      if (state.collection.nextDinoIndex >= DINOS.length) {
+        target.appendChild(el('div', { className: 'active-egg' },
+          el('span', { className: 'egg-emoji' }, '👑'),
+          el('div', { style: { flex: '1' } }, 'Все динозавры собраны! Ты — легенда!')
+        ));
+        return;
+      }
+      const progress = state.collection.activeEgg.crackProgress;
+      target.appendChild(el('div', { className: 'active-egg' },
+        el('span', { className: 'egg-emoji' }, '🥚'),
+        el('div', { style: { flex: '1' } },
+          el('div', { style: { fontSize: '14px', marginBottom: '4px' } }, 'Активное яйцо: ' + progress + ' / ' + EGG_CRACKS_TO_HATCH),
+          el('div', { className: 'egg-progress-track' },
+            el('div', { className: 'egg-progress-fill', style: { width: (100 * progress / EGG_CRACKS_TO_HATCH) + '%' } })
+          )
+        )
+      ));
+    }
+
+    function renderCollection(state) {
+      const target = document.getElementById('hub-collection');
+      target.innerHTML = '';
+      const section = el('div', { className: 'collection-section' });
+      section.appendChild(el('div', { className: 'collection-header' },
+        el('h3', { style: { margin: '0' } }, 'Моя коллекция (' + state.collection.dinosOwned.length + '/' + DINOS.length + ')'),
+        el('button', { className: 'btn btn-secondary', onclick: () => openCollectionModal(state) }, 'все →')
+      ));
+      const grid = el('div', { className: 'collection-grid' });
+      for (let i = 0; i < DINOS.length; i++) {
+        if (i < state.collection.dinosOwned.length) {
+          grid.appendChild(el('div', { className: 'collection-cell owned', onclick: () => openDinoDetailModal(DINOS[i]) }, dinoVisual(DINOS[i], 'dino-sm')));
+        } else {
+          grid.appendChild(el('div', { className: 'collection-cell locked' }, '🥚'));
+        }
+      }
+      section.appendChild(grid);
+      target.appendChild(section);
+    }
+
+    function openCollectionModal(state) { openCollectionModalReal(state); }
+
+    function renderHubFooter(state) {
+      const target = document.getElementById('hub-footer');
+      target.innerHTML = '';
+      const row = el('div', { className: 'footer-row' });
+      row.appendChild(el('button', {
+        className: 'btn btn-secondary',
+        onclick: () => openAchievementsModal(state)
+      }, '🏆 Ачивки (' + state.achievements.unlocked.length + '/' + ACHIEVEMENTS.length + ') →'));
+      row.appendChild(el('button', {
+        className: 'btn btn-secondary',
+        onclick: () => openProgressModal(state)
+      }, '📊 Прогресс →'));
+      target.appendChild(row);
+    }
+
+    function openAchievementsModal(state) { openAchievementsModalReal(state); }
+    function openProgressModal(state) { openProgressModalReal(state); }
+
+    let _modalEl = null;
+
+    function dinoVisual(dino, sizeClass) {
+      if (!dino.image) {
+        return el('span', { className: 'dino-emoji ' + sizeClass }, dino.emoji);
+      }
+      const img = document.createElement('img');
+      img.className = 'dino-img ' + sizeClass;
+      img.src = 'images/' + dino.image;
+      img.alt = dino.name;
+      img.draggable = false;
+      img.addEventListener('error', function() {
+        const fallback = el('span', { className: 'dino-emoji ' + sizeClass }, dino.emoji);
+        img.replaceWith(fallback);
+      });
+      return img;
+    }
+
+    function showModal(content) {
+      hideModal();
+      const overlay = el('div', { className: 'modal-overlay', onclick: (ev) => { if (ev.target === overlay) hideModal(); } });
+      const modal = el('div', { className: 'modal' }, content);
+      overlay.appendChild(modal);
+      document.body.appendChild(overlay);
+      _modalEl = overlay;
+    }
+
+    function hideModal() {
+      if (_modalEl) { _modalEl.remove(); _modalEl = null; }
+    }
+
+    function modalHeader(title) {
+      return el('div', { className: 'modal-header' },
+        el('h2', null, title),
+        el('button', { className: 'modal-close', onclick: hideModal }, '✕')
+      );
+    }
+
+    function openDinoDetailModal(dino) {
+      const content = el('div');
+      content.appendChild(modalHeader(dino.name));
+      const visualWrap = el('div', { style: { textAlign: 'center', margin: '8px 0 16px' } });
+      visualWrap.appendChild(dinoVisual(dino, 'dino-xl'));
+      content.appendChild(visualWrap);
+      content.appendChild(el('div', { style: { fontSize: '20px', textAlign: 'center', color: '#5d4030' } }, dino.fact));
+      showModal(content);
+    }
+
+    function openCollectionModalReal(state) {
+      const content = el('div');
+      content.appendChild(modalHeader('Моя коллекция (' + state.collection.dinosOwned.length + '/' + DINOS.length + ')'));
+      const list = el('div');
+      for (let i = 0; i < DINOS.length; i++) {
+        const d = DINOS[i];
+        const owned = i < state.collection.dinosOwned.length;
+        const item = el('div', { className: 'ach-item ' + (owned ? 'unlocked' : 'locked') },
+          el('div', { className: 'icon' }, owned ? dinoVisual(d, 'dino-md') : '🥚'),
+          el('div', { className: 'meta' },
+            el('div', { className: 'name' }, owned ? d.name : '???'),
+            el('div', { className: 'desc' }, owned ? d.fact : 'Реши ещё примеры — узнаешь!')
+          )
+        );
+        list.appendChild(item);
+      }
+      content.appendChild(list);
+      showModal(content);
+    }
+
+    function openProgressModalReal(state) {
+      const content = el('div');
+      content.appendChild(modalHeader('📊 Прогресс'));
+
+      const tier = state.player.currentTier;
+      const tierName = TIER_NAMES[tier];
+      content.appendChild(el('p', null, 'Сейчас: ' + tierName + ' уровень'));
+
+      const tierPool = Engine.poolForTier(tier);
+      const tierLearned = tierPool.filter(k => state.examples[k].learned).length;
+      const needed = Math.ceil(tierPool.length * TIER_UNLOCK_PCT);
+      if (tier < TIER_MULTIPLIERS.length - 1) {
+        content.appendChild(el('p', null, 'До следующего уровня: ' + Math.max(0, needed - tierLearned) + ' выучить'));
+      }
+
+      content.appendChild(el('h3', null, 'Прогресс по таблицам'));
+      for (let n = 1; n <= 10; n++) {
+        const unlocked = TIER_MULTIPLIERS[tier].includes(n);
+        let learned = 0;
+        for (let b = 1; b <= 10; b++) if (state.examples[n + 'x' + b].learned) learned++;
+        const row = el('div', { className: 'table-row ' + (unlocked ? '' : 'locked') },
+          el('div', { className: 'label' }, '×' + n),
+          el('div', { className: 'bar' },
+            el('div', { className: 'bar-fill', style: { width: (10 * learned) + '%' } })
+          ),
+          el('div', { className: 'count' }, unlocked ? (learned + '/10') : '🔒')
+        );
+        content.appendChild(row);
+      }
+
+      const learnedKeys = Object.entries(state.examples).filter(([k,v]) => v.learned).map(([k]) => k);
+      const learningKeys = Object.entries(state.examples)
+        .filter(([k,v]) => !v.learned && (v.correctFast + v.correctSlow + v.wrong) > 0)
+        .map(([k]) => k);
+      content.appendChild(el('h3', null, 'Знаю (' + learnedKeys.length + ')'));
+      content.appendChild(el('p', { style: { fontSize: '14px' } }, learnedKeys.slice(0, 30).join(', ') + (learnedKeys.length > 30 ? ' …' : '')));
+      content.appendChild(el('h3', null, 'Учу (' + learningKeys.length + ')'));
+      content.appendChild(el('p', { style: { fontSize: '14px' } }, learningKeys.slice(0, 30).join(', ') + (learningKeys.length > 30 ? ' …' : '')));
+
+      showModal(content);
+    }
+
+    function openAchievementsModalReal(state) {
+      const content = el('div');
+      content.appendChild(modalHeader('🏆 Ачивки (' + state.achievements.unlocked.length + '/' + ACHIEVEMENTS.length + ')'));
+      for (const a of ACHIEVEMENTS) {
+        const unlocked = state.achievements.unlocked.includes(a.id);
+        content.appendChild(el('div', { className: 'ach-item ' + (unlocked ? 'unlocked' : 'locked') },
+          el('div', { className: 'icon' }, a.icon),
+          el('div', { className: 'meta' },
+            el('div', { className: 'name' }, a.name),
+            el('div', { className: 'desc' }, a.desc)
+          )
+        ));
+      }
+      showModal(content);
+    }
+
+    function openSettingsMenuReal(state) {
+      const content = el('div');
+      content.appendChild(modalHeader('Настройки'));
+      content.appendChild(el('button', {
+        className: 'btn',
+        style: { width: '100%', marginTop: '16px' },
+        onclick: () => confirmReset(state)
+      }, '🗑 Сбросить весь прогресс'));
+      showModal(content);
+    }
+
+    function confirmReset(state) {
+      const content = el('div');
+      content.appendChild(modalHeader('Точно стереть весь прогресс?'));
+      content.appendChild(el('p', null,
+        'Будет потеряно: Lv.' + state.player.level + ', ' +
+        state.collection.dinosOwned.length + ' динозавр(а), ' +
+        state.achievements.unlocked.length + ' ачивок.'
+      ));
+      content.appendChild(el('p', { style: { fontWeight: 'bold' } }, 'Это нельзя отменить.'));
+      const actions = el('div', { style: { display: 'flex', gap: '12px', marginTop: '16px' } });
+      actions.appendChild(el('button', { className: 'btn', style: { flex: '1' }, onclick: hideModal }, 'Отмена'));
+      actions.appendChild(el('button', {
+        className: 'btn',
+        style: { flex: '1', background: '#ef4444', color: 'white' },
+        onclick: () => { Storage.reset(); location.reload(); }
+      }, 'Да, стереть'));
+      content.appendChild(actions);
+      showModal(content);
+    }
+
+    // === SECTION: DEV ===
+
+    function isDevMode() {
+      return new URLSearchParams(location.search).get('dev') === '1';
+    }
+
+    function devCheckImages() {
+      const results = DINOS.map(d => ({ dino: d, status: 'pending' }));
+      const content = el('div');
+      content.appendChild(modalHeader('📦 Картинки динозавров'));
+      const list = el('div', { id: 'dev-img-check-list' });
+      content.appendChild(list);
+      const summary = el('div', { style: { marginTop: '12px', fontWeight: 'bold' } }, 'Проверка...');
+      content.appendChild(summary);
+      showModal(content);
+
+      const renderRow = (r) => {
+        const icon = r.status === 'ok' ? '✅' : (r.status === 'fail' ? '❌' : '⏳');
+        const note = r.status === 'fail' ? '  (не найден)' : '';
+        return el('div', { style: { fontFamily: 'monospace', padding: '2px 0' } }, icon + ' ' + (r.dino.image || '<нет поля image>') + note);
+      };
+      const refresh = () => {
+        list.innerHTML = '';
+        results.forEach(r => list.appendChild(renderRow(r)));
+        const ok = results.filter(r => r.status === 'ok').length;
+        const total = results.length;
+        summary.textContent = 'Всего: ' + ok + ' / ' + total;
+      };
+      refresh();
+
+      results.forEach(r => {
+        if (!r.dino.image) { r.status = 'fail'; refresh(); return; }
+        const probe = new Image();
+        probe.onload = () => { r.status = 'ok'; refresh(); };
+        probe.onerror = () => { r.status = 'fail'; refresh(); };
+        probe.src = 'images/' + r.dino.image;
+      });
+    }
+
+    function renderDevPanel(state) {
+      const panel = el('div', { className: 'dev-panel' });
+      panel.appendChild(el('div', { style: { fontWeight: 'bold', marginBottom: '6px' } }, '⚙ DEV PANEL — не для дочки'));
+
+      const btn = (label, fn) => {
+        const b = el('button', { onclick: () => { fn(); Storage.save(state); renderHub(state); renderDevPanelInto(); } }, label);
+        return b;
+      };
+
+      panel.appendChild(btn('Reset all', () => { Storage.reset(); location.reload(); }));
+      panel.appendChild(btn('Set: новичок', () => devSetNovice(state)));
+      panel.appendChild(btn('Set: продвинутый', () => devSetAdvanced(state)));
+      panel.appendChild(btn('+10 правильных', () => devAddCorrects(state, 10)));
+      panel.appendChild(btn('Вылупить яйцо', () => devForceHatch(state)));
+      panel.appendChild(btn('+1 день (offset: ' + Math.round(state.settings.timeOffset / (24 * 3600 * 1000)) + 'д)', () => { state.settings.timeOffset += 24 * 3600 * 1000; }));
+      panel.appendChild(btn('Тир: средний', () => { state.player.currentTier = 1; }));
+      panel.appendChild(btn('Тир: сложный', () => { state.player.currentTier = 2; }));
+      panel.appendChild(btn('Дать ачивку streak-fast-10', () => { if (!state.achievements.unlocked.includes('streak-fast-10')) state.achievements.unlocked.push('streak-fast-10'); }));
+      panel.appendChild(el('button', { onclick: () => devCheckImages() }, '📦 Проверить картинки'));
+
+      return panel;
+    }
+
+    function renderDevPanelInto() {
+      const existing = document.getElementById('dev-panel-mount');
+      if (existing) existing.remove();
+      const mount = el('div', { id: 'dev-panel-mount' });
+      mount.appendChild(renderDevPanel(window.State));
+      document.getElementById('app').insertBefore(mount, document.getElementById('app').firstChild);
+    }
+
+    function devSetNovice(state) {
+      const fresh = createInitialState();
+      Object.assign(state, fresh);
+    }
+
+    function devSetAdvanced(state) {
+      const fresh = createInitialState();
+      Object.assign(state, fresh);
+      const pool = Engine.poolForTier(0);
+      for (let i = 0; i < 36; i++) {
+        const ex = state.examples[pool[i]];
+        ex.correctFast = 5;
+        ex.streakFast = 3;
+        ex.learned = true;
+        ex.learnedAt = Engine.now(state);
+        ex.lastSeen = Engine.now(state);
+      }
+      state.player.xp = 350;
+      state.player.level = 3;
+      state.player.totalCorrectFast = 80;
+      state.collection.dinosOwned = ['velociraptor', 'stegosaurus', 'triceratops', 'plesiosaurus'];
+      state.collection.nextDinoIndex = 4;
+      state.achievements.unlocked = ['first-correct', 'first-dino', 'total-50', 'learned-50'];
+    }
+
+    function devAddCorrects(state, n) {
+      const pool = Engine.poolForTier(state.player.currentTier);
+      for (let i = 0; i < n; i++) {
+        const key = pool[Math.floor(Math.random() * pool.length)];
+        Engine.tick(state, key, true, 3000);
+      }
+    }
+
+    function devForceHatch(state) {
+      state.collection.activeEgg.crackProgress = 49;
+      const events = Engine.crackEgg(state);
+      runEventAnimations(events, () => {});
+    }
+
+    function exposeDevGlobals(state) {
+      window.MathDino = {
+        state: () => state,
+        Engine,
+        Storage,
+        forceLearned: (key) => {
+          const ex = state.examples[key];
+          ex.streakFast = 3; ex.learned = true; ex.learnedAt = Engine.now(state);
+          Storage.save(state);
+        },
+        triggerHatch: () => devForceHatch(state)
+      };
+    }
+
+    // === SECTION: INIT ===
+    document.addEventListener('DOMContentLoaded', () => {
+      if (isTestMode()) { runTests(); return; }
+      window.State = Storage.load();
+      const today = Engine.dateStringFromMs(Engine.now(window.State));
+      Engine.handleDailyStreak(window.State, today);
+      Storage.save(window.State);
+      renderHub(window.State);
+      if (isDevMode()) {
+        exposeDevGlobals(window.State);
+        renderDevPanelInto();
+      }
+    });
+  </script>
+</body>
+</html>
