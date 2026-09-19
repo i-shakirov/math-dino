@@ -2182,10 +2182,10 @@
     let _pendingTierBanner = null; // тир, открытый во время раунда — покажем баннер на хабе
     let _sessionCounted = false;   // sessionsCount++ один раз за сессию, а не за раунд
 
-    function stopTrainerTimers(t) {
-      if (!t) return;
-      if (t.timerInterval) { clearInterval(t.timerInterval); t.timerInterval = null; }
-      if (t.advanceTimer) { clearTimeout(t.advanceTimer); t.advanceTimer = null; }
+    function stopTrainerTimers(tr) {
+      if (!tr) return;
+      if (tr.timerInterval) { clearInterval(tr.timerInterval); tr.timerInterval = null; }
+      if (tr.advanceTimer) { clearTimeout(tr.advanceTimer); tr.advanceTimer = null; }
     }
 
     // Обёртка для отложенных колбэков: срабатывает, только если раунд всё ещё тот же.
@@ -2222,17 +2222,17 @@
     }
 
     function renderTrainer() {
-      const t = _trainer;
+      const tr = _trainer;
       const app = document.getElementById('app');
       app.innerHTML = '';
 
       const cells = 5;
-      const eggCrack = t.state.collection.activeEgg.crackProgress;
+      const eggCrack = tr.state.collection.activeEgg.crackProgress;
       const filled = Math.max(0, Math.min(cells, Math.floor(eggCrack * cells / EGG_CRACKS_TO_HATCH)));
       const eggDots = '▰'.repeat(filled) + '▱'.repeat(cells - filled);
       const header = el('div', { className: 'trainer-header' },
         el('button', { className: 'btn btn-secondary', onclick: returnToHub }, '← домой'),
-        el('div', null, '🔥 серия: ' + t.state.player.streakAny),
+        el('div', null, '🔥 серия: ' + tr.state.player.streakAny),
         el('div', null, '🥚 ' + eggDots)
       );
       app.appendChild(header);
@@ -2241,7 +2241,7 @@
       app.appendChild(qContainer);
 
       app.appendChild(el('div', { className: 'round-progress', id: 'round-progress' },
-        'Раунд: вопрос ' + (t.roundIndex + 1) + ' из ' + ROUND_SIZE
+        'Раунд: вопрос ' + (tr.roundIndex + 1) + ' из ' + ROUND_SIZE
       ));
     }
 
@@ -2252,13 +2252,13 @@
     }
 
     function pickAndShow() {
-      const t = _trainer;
-      const q = Engine.pickQuestion(t.state, t.lastKey);
+      const tr = _trainer;
+      const q = Engine.pickQuestion(tr.state, tr.lastKey);
       if (!q) { finishRoundEarly(); return; }
 
-      t.currentQuestion = q;
-      t.phase = 'asking';
-      t.startTime = Date.now();
+      tr.currentQuestion = q;
+      tr.phase = 'asking';
+      tr.startTime = Date.now();
 
       const c = document.getElementById('q-container');
       c.innerHTML = '';
@@ -2275,9 +2275,9 @@
       input.focus();
 
       // Секундомер: считает время вверх, ответ ничем не ограничен по времени.
-      const seq = t.seq;
-      if (t.timerInterval) clearInterval(t.timerInterval);
-      t.timerInterval = setInterval(() => {
+      const seq = tr.seq;
+      if (tr.timerInterval) clearInterval(tr.timerInterval);
+      tr.timerInterval = setInterval(() => {
         if (!_trainer || _trainer.seq !== seq || _trainer.phase !== 'asking') return;
         const tEl = document.getElementById('timer');
         if (tEl) tEl.textContent = '⏱ ' + ((Date.now() - _trainer.startTime) / 1000).toFixed(1) + 'с';
@@ -2290,8 +2290,8 @@
     }
 
     function submitAnswer() {
-      const t = _trainer;
-      if (!t || t.phase !== 'asking') return;
+      const tr = _trainer;
+      if (!tr || tr.phase !== 'asking') return;
       const input = document.getElementById('answer-input');
       if (!input) return;
       const raw = input.value.trim();
@@ -2302,31 +2302,31 @@
     }
 
     function grade(answer) {
-      const t = _trainer;
-      if (t.phase !== 'asking') return;
-      t.phase = 'grading';
-      stopTrainerTimers(t);
+      const tr = _trainer;
+      if (tr.phase !== 'asking') return;
+      tr.phase = 'grading';
+      stopTrainerTimers(tr);
 
-      const elapsed = Date.now() - t.startTime;
-      const correctAnswer = t.currentQuestion.a * t.currentQuestion.b;
+      const elapsed = Date.now() - tr.startTime;
+      const correctAnswer = tr.currentQuestion.a * tr.currentQuestion.b;
       const isCorrect = (answer === correctAnswer);
       const fast = isCorrect && elapsed <= FAST_THRESHOLD_MS;
-      const xpBefore = t.state.player.xp;
+      const xpBefore = tr.state.player.xp;
 
-      const events = Engine.tick(t.state, t.currentQuestion.key, isCorrect, elapsed);
-      Storage.save(t.state);
+      const events = Engine.tick(tr.state, tr.currentQuestion.key, isCorrect, elapsed);
+      Storage.save(tr.state);
 
-      const xpGained = t.state.player.xp - xpBefore;
-      t.roundXPGained += xpGained;
-      t.roundResults.push({ correct: isCorrect, fast: fast, key: t.currentQuestion.key, elapsed: elapsed });
-      t.lastKey = t.currentQuestion.key;
+      const xpGained = tr.state.player.xp - xpBefore;
+      tr.roundXPGained += xpGained;
+      tr.roundResults.push({ correct: isCorrect, fast: fast, key: tr.currentQuestion.key, elapsed: elapsed });
+      tr.lastKey = tr.currentQuestion.key;
 
       showFeedback(isCorrect, fast, answer, correctAnswer, xpGained, events);
     }
 
     function showFeedback(isCorrect, fast, given, correctAnswer, xpGained, events) {
-      const t = _trainer;
-      t.phase = 'feedback';
+      const tr = _trainer;
+      tr.phase = 'feedback';
       const input = document.getElementById('answer-input');
       const submit = document.getElementById('answer-submit');
       if (input) input.disabled = true;
@@ -2343,7 +2343,7 @@
       if (!isCorrect) {
         c.appendChild(el('div', { className: 'given-answer' }, String(given)));
         c.appendChild(el('div', { className: 'correct-answer' },
-          t.currentQuestion.a + ' × ' + t.currentQuestion.b + ' = ' + correctAnswer));
+          tr.currentQuestion.a + ' × ' + tr.currentQuestion.b + ' = ' + correctAnswer));
         c.appendChild(el('button', { className: 'btn btn-next', onclick: advance }, 'Дальше →'));
       }
 
@@ -2351,19 +2351,19 @@
     }
 
     function scheduleAdvance(delay) {
-      const t = _trainer;
-      if (!t) return;
-      if (t.advanceTimer) clearTimeout(t.advanceTimer);
-      t.advanceTimer = setTimeout(forRound(t.seq, advance), delay);
+      const tr = _trainer;
+      if (!tr) return;
+      if (tr.advanceTimer) clearTimeout(tr.advanceTimer);
+      tr.advanceTimer = setTimeout(forRound(tr.seq, advance), delay);
     }
 
     function advance() {
-      const t = _trainer;
-      if (!t || t.phase === 'advancing') return;
-      t.phase = 'advancing';
-      stopTrainerTimers(t);
-      t.roundIndex++;
-      if (t.roundIndex >= ROUND_SIZE) {
+      const tr = _trainer;
+      if (!tr || tr.phase === 'advancing') return;
+      tr.phase = 'advancing';
+      stopTrainerTimers(tr);
+      tr.roundIndex++;
+      if (tr.roundIndex >= ROUND_SIZE) {
         finishRound();
       } else {
         renderTrainer();
@@ -2468,50 +2468,50 @@
 
     // Примеры кончились посреди раунда: засчитываем то, что успели ответить.
     function finishRoundEarly() {
-      const t = _trainer;
-      if (t.roundResults.length > 0) {
-        t.endedEarly = true;
+      const tr = _trainer;
+      if (tr.roundResults.length > 0) {
+        tr.endedEarly = true;
         finishRound();
         return;
       }
-      showNothingToPractice(t.state);
+      showNothingToPractice(tr.state);
     }
 
     function finishRound() {
-      const t = _trainer;
-      const events = Engine.awardXP(t.state, ROUND_BONUS_XP);
-      t.roundXPGained += ROUND_BONUS_XP;
+      const tr = _trainer;
+      const events = Engine.awardXP(tr.state, ROUND_BONUS_XP);
+      tr.roundXPGained += ROUND_BONUS_XP;
 
-      const allFast = t.roundResults.length === ROUND_SIZE && t.roundResults.every(r => r.fast);
-      if (allFast && !t.state.achievements.unlocked.includes('perfect-round')) {
-        t.state.achievements.unlocked.push('perfect-round');
+      const allFast = tr.roundResults.length === ROUND_SIZE && tr.roundResults.every(r => r.fast);
+      if (allFast && !tr.state.achievements.unlocked.includes('perfect-round')) {
+        tr.state.achievements.unlocked.push('perfect-round');
         events.push({ type: 'achievement', id: 'perfect-round' });
       }
 
-      Storage.save(t.state);
+      Storage.save(tr.state);
       renderRoundEnd();
       runEventAnimations(events, () => {});
     }
 
     function renderRoundEnd() {
-      const t = _trainer;
-      const asked = t.roundResults.length;
-      const correctCount = t.roundResults.filter(r => r.correct).length;
-      const fastCount = t.roundResults.filter(r => r.fast).length;
-      const eggCrack = t.state.collection.activeEgg.crackProgress;
-      const nothingLeft = Engine.pickQuestion(t.state, null) === null;
+      const tr = _trainer;
+      const asked = tr.roundResults.length;
+      const correctCount = tr.roundResults.filter(r => r.correct).length;
+      const fastCount = tr.roundResults.filter(r => r.fast).length;
+      const eggCrack = tr.state.collection.activeEgg.crackProgress;
+      const nothingLeft = Engine.pickQuestion(tr.state, null) === null;
 
       const app = document.getElementById('app');
       app.innerHTML = '';
       const wrap = el('div', { className: 'round-end' },
         el('h2', null, '🏁 Раунд закончен!'),
-        t.endedEarly ? el('p', { className: 'round-end-note' },
+        tr.endedEarly ? el('p', { className: 'round-end-note' },
           'Примеры этого уровня закончились — раунд засчитан целиком.') : null,
         el('div', { className: 'stats' },
           el('div', null, 'Правильно: ' + correctCount + ' / ' + asked),
           el('div', null, 'Из них быстро: ' + fastCount),
-          el('div', null, 'Получено: +' + t.roundXPGained + ' XP'),
-          el('div', null, 'Серия: 🔥 ' + t.state.player.streakAny),
+          el('div', null, 'Получено: +' + tr.roundXPGained + ' XP'),
+          el('div', null, 'Серия: 🔥 ' + tr.state.player.streakAny),
           el('div', null, 'Яйцо: ' + Math.min(eggCrack, EGG_CRACKS_TO_HATCH) + '/' + EGG_CRACKS_TO_HATCH)
         ),
         nothingLeft ? el('p', { className: 'round-end-note' },
@@ -2519,7 +2519,7 @@
         el('div', { className: 'actions' },
           nothingLeft ? null : el('button', {
             className: 'btn btn-primary btn-again',
-            onclick: () => startRound(t.state)
+            onclick: () => startRound(tr.state)
           }, 'Ещё 10! 🦖'),
           el('button', { className: 'btn btn-secondary', onclick: returnToHub }, '← Домой')
         )
