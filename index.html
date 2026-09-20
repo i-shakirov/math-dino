@@ -187,6 +187,7 @@
 
     /* Ввод имени */
     .name-gate { background: rgba(255,255,255,0.75); border-radius: 16px; padding: 32px 24px; text-align: center; margin-top: 32px; }
+    .name-gate-lang { display: flex; justify-content: flex-end; margin: -8px -4px 8px; }
     .name-gate h2 { margin: 12px 0 8px; font-size: clamp(22px, 5.5vw, 30px); }
     .name-gate-dino { font-size: clamp(56px, 16vw, 96px); line-height: 1; }
     .name-gate-note { color: #6b5642; margin: 0 0 20px; }
@@ -935,7 +936,17 @@
     }
 
     function detectLang() {
-      return _langFromTag(typeof navigator === 'undefined' ? '' : navigator.language);
+      if (typeof navigator === 'undefined') return DEFAULT_LANG;
+      // navigator.language — только первый язык предпочтений; в languages
+      // лежит весь список, и второй-третий тоже стоит уважить.
+      const tags = (navigator.languages && navigator.languages.length)
+        ? navigator.languages
+        : [navigator.language];
+      for (const tag of tags) {
+        const code = String(tag || '').toLowerCase().slice(0, 2);
+        if (LANGS.includes(code)) return code;
+      }
+      return DEFAULT_LANG;
     }
 
     // Корейская падежная частица зависит от того, кончается ли последний
@@ -1028,16 +1039,30 @@
     function tierNameInline(tier) { return t('data.tier.' + tier + '.inline'); }
 
     // Смена языка меняет весь экран, поэтому открытая модалка закрывается:
-    // showModal кладёт оверлей в document.body, а renderHub чистит только
-    // #app — без этого старая модалка пережила бы перерисовку.
-    function applyLang(lang, state) {
+    // showModal кладёт оверлей в document.body, а перерисовка чистит только
+    // #app — без этого старая модалка пережила бы перерисовку. По умолчанию
+    // перерисовывается хаб; необязательный rerender позволяет остаться на
+    // текущем экране — например, не выбрасывать игрока с экрана имени.
+    function applyLang(lang, state, rerender) {
       setLang(lang);
       state.settings.lang = lang;
       Storage.save(state);
       document.documentElement.setAttribute('lang', lang);
       document.title = t('app.title');
       hideModal();
-      renderHub(state);
+      if (rerender) rerender(); else renderHub(state);
+    }
+
+    // Чип языка переиспользуется в шапке хаба и на экране ввода имени.
+    // rerender — что перерисовать после смены языка; по умолчанию (из
+    // applyLang) это хаб, но вызывающий может передать свой экран.
+    function langChip(state, rerender) {
+      return el('div', { className: 'lang-chip' }, ...LANGS.map(code =>
+        el('button', {
+          className: 'lang-chip-btn' + (code === getLang() ? ' is-current' : ''),
+          onclick: () => { if (code !== getLang()) applyLang(code, state, rerender); }
+        }, LANG_SHORT[code])
+      ));
     }
 
     // === SECTION: TEST INFRA ===
@@ -2409,22 +2434,75 @@
         assertEq(_langFromTag(''), 'en');
         assertEq(_langFromTag(null), 'en');
       });
+
+      it('в navigator.languages поддерживаемый язык не первый — берётся он', () => {
+        // В браузере navigator.languages — геттер на прототипе, простое
+        // присваивание бросило бы TypeError. Подмена — как в соседних тестах.
+        const had = Object.prototype.hasOwnProperty.call(navigator, 'languages');
+        const was = navigator.languages;
+        Object.defineProperty(navigator, 'languages', { value: ['ja-JP', 'ko-KR', 'en-US'], configurable: true });
+        try {
+          assertEq(detectLang(), 'ko');
+        } finally {
+          if (had) Object.defineProperty(navigator, 'languages', { value: was, configurable: true, writable: true });
+          else delete navigator.languages;
+        }
+      });
+
+      it('в navigator.languages нет ни одного поддерживаемого — язык по умолчанию', () => {
+        const had = Object.prototype.hasOwnProperty.call(navigator, 'languages');
+        const was = navigator.languages;
+        Object.defineProperty(navigator, 'languages', { value: ['ja-JP', 'zh-CN'], configurable: true });
+        try {
+          assertEq(detectLang(), DEFAULT_LANG);
+        } finally {
+          if (had) Object.defineProperty(navigator, 'languages', { value: was, configurable: true, writable: true });
+          else delete navigator.languages;
+        }
+      });
+
+      it('пустой или отсутствующий navigator.languages — откат на navigator.language', () => {
+        const hadLangs = Object.prototype.hasOwnProperty.call(navigator, 'languages');
+        const wasLangs = navigator.languages;
+        const hadLang = Object.prototype.hasOwnProperty.call(navigator, 'language');
+        const wasLang = navigator.language;
+        Object.defineProperty(navigator, 'language', { value: 'ko-KR', configurable: true });
+        try {
+          Object.defineProperty(navigator, 'languages', { value: undefined, configurable: true });
+          assertEq(detectLang(), 'ko');
+
+          Object.defineProperty(navigator, 'languages', { value: [], configurable: true });
+          assertEq(detectLang(), 'ko');
+        } finally {
+          if (hadLangs) Object.defineProperty(navigator, 'languages', { value: wasLangs, configurable: true, writable: true });
+          else delete navigator.languages;
+          if (hadLang) Object.defineProperty(navigator, 'language', { value: wasLang, configurable: true, writable: true });
+          else delete navigator.language;
+        }
+      });
     });
 
     describe('i18n: язык в сохранении', () => {
       it('новое состояние получает определённый язык', () => {
         // Без подмены navigator.language тест не может упасть: detectLang()
-        // по построению всегда возвращает член LANGS. Подмена — как в
-        // соседнем тесте миграции ниже.
-        const had = Object.prototype.hasOwnProperty.call(navigator, 'language');
-        const was = navigator.language;
+        // по построению всегда возвращает член LANGS. navigator.languages
+        // тоже подменяем на пустой список — иначе в настоящем браузере он
+        // остаётся реальным списком предпочтений и перебивает собой
+        // единственный navigator.language, который здесь проверяется.
+        const hadLang = Object.prototype.hasOwnProperty.call(navigator, 'language');
+        const wasLang = navigator.language;
+        const hadLangs = Object.prototype.hasOwnProperty.call(navigator, 'languages');
+        const wasLangs = navigator.languages;
         Object.defineProperty(navigator, 'language', { value: 'ko-KR', configurable: true });
+        Object.defineProperty(navigator, 'languages', { value: [], configurable: true });
         try {
           const s = createInitialState();
           assertEq(s.settings.lang, 'ko');
         } finally {
-          if (had) Object.defineProperty(navigator, 'language', { value: was, configurable: true, writable: true });
+          if (hadLang) Object.defineProperty(navigator, 'language', { value: wasLang, configurable: true, writable: true });
           else delete navigator.language;
+          if (hadLangs) Object.defineProperty(navigator, 'languages', { value: wasLangs, configurable: true, writable: true });
+          else delete navigator.languages;
         }
       });
 
@@ -2741,6 +2819,8 @@
       });
 
       app.appendChild(el('div', { className: 'name-gate' },
+        el('div', { className: 'name-gate-lang' },
+          langChip(state, () => renderNameGate(state, onDone))),
         el('div', { className: 'name-gate-dino' }, '🦕'),
         el('h2', null, t('gate.title')),
         el('p', { className: 'name-gate-note' }, t('gate.subtitle')),
@@ -2790,12 +2870,7 @@
       const header = el('div', { className: 'header' },
         el('h1', null, greetingFor(state)),
         el('div', { className: 'header-actions' },
-          el('div', { className: 'lang-chip' }, ...LANGS.map(code =>
-            el('button', {
-              className: 'lang-chip-btn' + (code === getLang() ? ' is-current' : ''),
-              onclick: () => { if (code !== getLang()) applyLang(code, state); }
-            }, LANG_SHORT[code])
-          )),
+          langChip(state),
           el('button', { onclick: () => openSettingsMenu(state) }, '⚙')
         )
       );
